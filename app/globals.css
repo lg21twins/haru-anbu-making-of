@@ -267,6 +267,12 @@ body.has-custom-cursor textarea {
   100% { transform: translate3d(-50%, 0, 0); }
 }
 
+/* ─── film credits roll ─────────────────────────────────────────── */
+@keyframes credit-roll {
+  from { transform: translateY(100vh); }
+  to { transform: translateY(calc(-100% - 12vh)); }
+}
+
 /* ─── reduced motion ────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

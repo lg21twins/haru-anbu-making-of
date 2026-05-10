@@ -8,6 +8,7 @@ import { CommandScene } from "@/components/scenes/CommandScene";
 import { LineScene } from "@/components/scenes/LineScene";
 import { CountUpScene } from "@/components/scenes/CountUpScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
+import { CreditsScene } from "@/components/scenes/CreditsScene";
 
 const PersonasInterlude = dynamic(
   () => import("@/components/scenes/PersonasInterlude").then((m) => m.PersonasInterlude)
@@ -148,8 +149,9 @@ export function Scenes() {
         />
         <CountUpScene id="s-count-28" to={28} suffix="일." duration={1.2} />
 
-        {/* 끝 */}
+        {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         <FinalScene />
+        <CreditsScene />
       </Suspense>
     </main>
   );
