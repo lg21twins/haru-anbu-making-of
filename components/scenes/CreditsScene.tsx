@@ -102,55 +102,72 @@ const credits: Line[] = [
   { kind: "spacer", h: 8 },
 ];
 
+const TOTAL_VH = 600;
+
 export function CreditsScene() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(false);
+  const outerRef = useRef<HTMLElement>(null);
+  const [progress, setProgress] = useState(0);
+  const ticking = useRef(false);
 
   useEffect(() => {
-    const el = sectionRef.current;
+    const el = outerRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setActive(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { threshold: 0.25 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const compute = () => {
+      const rect = el.getBoundingClientRect();
+      const range = el.offsetHeight - window.innerHeight;
+      if (range <= 0) {
+        setProgress(0);
+        return;
+      }
+      const scrolled = Math.max(0, Math.min(range, -rect.top));
+      setProgress(scrolled / range);
+    };
+    const onScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+      requestAnimationFrame(() => {
+        compute();
+        ticking.current = false;
+      });
+    };
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", compute);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", compute);
+    };
   }, []);
+
+  const vh = 100 - 112 * progress;
+  const pct = progress * 100;
+  const transform = `translateY(calc(${vh}vh - ${pct}%))`;
 
   return (
     <section
-      ref={sectionRef}
+      ref={outerRef}
       id="s-credits"
-      className="relative h-screen w-full overflow-hidden bg-black"
+      className="relative w-full"
+      style={{ height: `${TOTAL_VH}vh` }}
     >
-      {/* top + bottom gradient masks for cinematic feel */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black to-transparent"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-black to-transparent"
-      />
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-black to-transparent"
+        />
 
-      <div
-        className="absolute inset-x-0 mx-auto max-w-3xl px-6 text-center md:px-12"
-        style={{
-          animation: active ? "credit-roll 80s linear forwards" : undefined,
-          transform: "translateY(100vh)",
-        }}
-      >
-        {credits.map((line, i) => (
-          <CreditLine key={i} line={line} />
-        ))}
+        <div
+          className="absolute inset-x-0 mx-auto max-w-3xl px-6 text-center md:px-12"
+          style={{ transform, willChange: "transform" }}
+        >
+          {credits.map((line, i) => (
+            <CreditLine key={i} line={line} />
+          ))}
+        </div>
       </div>
     </section>
   );
