@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #06080a;
+  --color-bg-soft: #0e1014;
+  --color-fg: #f4f5f7;
+  --color-fg-dim: #9aa0a6;
+  --color-key: #7eff8d;
+  --color-key-soft: #4dd96b;
+  --color-key-glow: rgba(126, 255, 141, 0.45);
+  --color-accent: #2c7afc;
+  --color-accent-pale: #74a8ff;
+  --color-accent-violet: #7c4dff;
+  --color-accent-cyan: #00d4ff;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Pretendard Variable", "Inter", system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss03", "cv11";
+  overscroll-behavior: none;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #0a0a0a;
+}
+
+/* ─── custom cursor (Haru-Anbu logo) ─────────────────────────────── */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+}
+
+.cursor-dot {
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  background: url("/cursor-haru.svg") center/contain no-repeat;
+  filter: drop-shadow(0 0 6px var(--color-key-glow));
+  transition: transform 0.18s cubic-bezier(0.2, 1, 0.4, 1);
+}
+
+.cursor-dot[data-state="link"],
+.cursor-dot[data-state="card"] {
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  filter: drop-shadow(0 0 12px var(--color-key-glow));
+}
+
+.cursor-dot[data-state="text"] {
+  opacity: 0.5;
+}
+
+.cursor-ring {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(126, 255, 141, 0.18);
+  transition:
+    width 0.3s cubic-bezier(0.2, 1, 0.4, 1),
+    height 0.3s cubic-bezier(0.2, 1, 0.4, 1),
+    margin 0.3s cubic-bezier(0.2, 1, 0.4, 1),
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease;
+  opacity: 0;
+}
+
+.cursor-ring[data-state="link"] {
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  background: rgba(126, 255, 141, 0.05);
+  border-color: rgba(126, 255, 141, 0.55);
+  opacity: 1;
+}
+
+.cursor-ring[data-state="card"] {
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-color: rgba(126, 255, 141, 0.4);
+  background: rgba(126, 255, 141, 0.03);
+  opacity: 1;
+}
+
+.cursor-ring[data-state="text"] {
+  width: 2px;
+  height: 28px;
+  margin: -14px 0 0 -1px;
+  border: none;
+  background: rgba(126, 255, 141, 0.85);
+  border-radius: 2px;
+  opacity: 1;
+}
+
+body.has-custom-cursor {
+  cursor: none;
+}
+
+body.has-custom-cursor a,
+body.has-custom-cursor button,
+body.has-custom-cursor [role="button"],
+body.has-custom-cursor input,
+body.has-custom-cursor textarea {
+  cursor: none;
+}
+
+@media (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+  body.has-custom-cursor,
+  body.has-custom-cursor * {
+    cursor: auto !important;
+  }
+}
+
+/* ─── film grain (Awwwards) ─────────────────────────────────────── */
+.noise-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 320 320' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ─── gradient mesh blobs (Stripe/Vercel) ───────────────────────── */
+@keyframes blob1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(15%, 12%, 0) scale(1.15); }
+}
+@keyframes blob2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
+  50% { transform: translate3d(-12%, 18%, 0) scale(0.92); }
+}
+@keyframes blob3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.95); }
+  50% { transform: translate3d(10%, -10%, 0) scale(1.2); }
+}
+.animate-blob1 { animation: blob1 22s ease-in-out infinite; }
+.animate-blob2 { animation: blob2 28s ease-in-out infinite; }
+.animate-blob3 { animation: blob3 18s ease-in-out infinite; }
+
+/* ─── marquee (Locomotive) ──────────────────────────────────────── */
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee linear infinite;
+  will-change: transform;
+}
+.marquee-reverse {
+  animation-direction: reverse;
+}
+
+/* ─── split-text char prep ──────────────────────────────────────── */
+.char {
+  display: inline-block;
+  will-change: transform, opacity;
+  transform: translateY(110%);
+  opacity: 0;
+}
+.char.space {
+  width: 0.25em;
+}
+
+/* ─── tilt card 3D layer ────────────────────────────────────────── */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.2, 1, 0.4, 1);
+  will-change: transform;
+}
+.tilt-card-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(124, 168, 255, 0.18),
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.tilt-card:hover .tilt-card-glow {
+  opacity: 1;
+}
+
+/* ─── caret blink (typewriter) ──────────────────────────────────── */
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.caret {
+  display: inline-block;
+  vertical-align: baseline;
+  width: 0.08em;
+  height: 0.85em;
+  background: var(--color-key);
+  margin-left: 0.06em;
+  animation: caret-blink 1s steps(1, end) infinite;
+  box-shadow: 0 0 12px var(--color-key-glow);
+}
+.caret-fat {
+  width: 0.5ch;
+  height: 1.1em;
+  margin-left: 0.05em;
+}
+
+/* ─── retry-storm ───────────────────────────────────────────────── */
+@keyframes storm-fall {
+  0% { opacity: 0; transform: translateY(-40%) rotate(var(--r, 0deg)); }
+  20% { opacity: 0.85; }
+  100% { opacity: 0.2; transform: translateY(20%) rotate(var(--r, 0deg)); }
+}
+
+/* ─── reel ticker ───────────────────────────────────────────────── */
+@keyframes reel-pan {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ─── reduced motion ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .char {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
