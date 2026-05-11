@@ -18,40 +18,54 @@ UX 리서처이자
 카피라이터이자
 프롬프트 엔지니어야.`;
 
-const PRE_HOLD = 0.05;
-const POST_HOLD = 0.08;
-const MAX_CPS = 24; // 스크롤 속도와 무관하게 최대 타이핑 속도 (글자/초)
+const CPS = 28; // 글자/초
+const START_DELAY_MS = 250;
+const DWELL_AFTER_MS = 1300; // 타이핑 끝나고 풀릴 때까지 잡고 있는 시간
+
+type LenisLike = { stop: () => void; start: () => void };
 
 export function OpeningPromptScene() {
   const outerRef = useRef<HTMLElement>(null);
   const [chars, setChars] = useState(0);
   const charsRef = useRef(0);
-  const targetRef = useRef(0);
   const accRef = useRef(0);
   const lastFrameRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const startedRef = useRef(false);
+  const lockedRef = useRef(false);
+  const dwellTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const el = outerRef.current;
-    if (!el) return;
+    if (typeof window === "undefined") return;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduce) {
+      setChars(fullText.length);
+      return;
+    }
 
-    const computeTarget = () => {
-      const rect = el.getBoundingClientRect();
-      const range = el.offsetHeight - window.innerHeight;
-      if (range <= 0) {
-        targetRef.current = fullText.length;
-        return;
-      }
-      const scrolled = Math.max(0, Math.min(range, -rect.top));
-      const p = scrolled / range;
-      const typeProgress = Math.max(
-        0,
-        Math.min(1, (p - PRE_HOLD) / (1 - PRE_HOLD - POST_HOLD))
-      );
-      targetRef.current = Math.round(fullText.length * typeProgress);
+    const getLenis = (): LenisLike | null => {
+      const w = window as unknown as { __lenis?: LenisLike };
+      return w.__lenis ?? null;
+    };
+
+    const lock = () => {
+      if (lockedRef.current) return;
+      lockedRef.current = true;
+      getLenis()?.stop();
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    };
+
+    const unlock = () => {
+      if (!lockedRef.current) return;
+      lockedRef.current = false;
+      getLenis()?.start();
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     };
 
     const ensureAudio = () => {
@@ -71,15 +85,13 @@ export function OpeningPromptScene() {
     };
 
     const playTick = () => {
-      // 햅틱 (안드로이드)
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(2);
         } catch {
-          /* ignore */
+          /* noop */
         }
       }
-      // 미세한 키 클릭 사운드
       const ctx = ensureAudio();
       if (!ctx || ctx.state === "closed") return;
       if (ctx.state === "suspended") {
@@ -99,7 +111,7 @@ export function OpeningPromptScene() {
         osc.start(now);
         osc.stop(now + 0.05);
       } catch {
-        /* ignore */
+        /* noop */
       }
     };
 
@@ -107,56 +119,45 @@ export function OpeningPromptScene() {
       const last = lastFrameRef.current || now;
       lastFrameRef.current = now;
       const dt = Math.min(0.1, (now - last) / 1000);
-
       const cur = charsRef.current;
-      const tgt = targetRef.current;
-
-      if (reduce) {
-        if (cur !== tgt) {
-          charsRef.current = tgt;
-          setChars(tgt);
-        }
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      let next = cur;
-      if (tgt > cur) {
-        accRef.current += MAX_CPS * dt;
+      if (cur < fullText.length) {
+        accRef.current += CPS * dt;
         const step = Math.floor(accRef.current);
         if (step > 0) {
           accRef.current -= step;
-          next = Math.min(tgt, cur + step);
+          const next = Math.min(fullText.length, cur + step);
+          charsRef.current = next;
+          setChars(next);
+          playTick();
+          if (next === fullText.length) {
+            dwellTimerRef.current = window.setTimeout(unlock, DWELL_AFTER_MS);
+          }
         }
-      } else if (tgt < cur) {
-        // 스크롤 되감기 — 즉시 따라감
-        next = tgt;
-        accRef.current = 0;
-      } else {
-        // 정지 상태 — 잔여 누적 리셋해서 다음 진입 깔끔하게
-        accRef.current = 0;
+        rafRef.current = requestAnimationFrame(tick);
       }
+      // 타이핑이 끝나면 rAF도 멈춤 — 더 할 일 없음
+    };
 
-      if (next !== cur) {
-        charsRef.current = next;
-        setChars(next);
-        if (next > cur) playTick();
+    const start = () => {
+      if (startedRef.current) return;
+      // 새로고침 등으로 페이지 중간에서 시작하면 인트로 스킵
+      if (window.scrollY > 80) {
+        setChars(fullText.length);
+        return;
       }
-
+      startedRef.current = true;
+      lock();
+      lastFrameRef.current = 0;
       rafRef.current = requestAnimationFrame(tick);
     };
 
-    computeTarget();
-    rafRef.current = requestAnimationFrame(tick);
-
-    const onScroll = () => computeTarget();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", computeTarget);
+    const initTimer = window.setTimeout(start, START_DELAY_MS);
 
     return () => {
+      window.clearTimeout(initTimer);
+      if (dwellTimerRef.current) window.clearTimeout(dwellTimerRef.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", computeTarget);
+      unlock();
       audioCtxRef.current?.close().catch(() => {});
       audioCtxRef.current = null;
     };
@@ -166,9 +167,9 @@ export function OpeningPromptScene() {
     <section
       ref={outerRef}
       className="relative w-full"
-      style={{ height: "560vh" }}
+      style={{ height: "100vh" }}
     >
-      <div className="sticky top-0 flex h-screen w-full items-end justify-center overflow-hidden bg-black">
+      <div className="flex h-full w-full items-end justify-center overflow-hidden bg-black">
         <div className="w-full px-6 pb-[14vh] md:px-16 md:pb-[16vh]">
           <h1
             className="font-sans font-semibold leading-[1.06] tracking-tight text-white whitespace-pre-line"
