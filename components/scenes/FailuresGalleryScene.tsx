@@ -70,7 +70,7 @@ export function FailuresGalleryScene() {
           </h2>
         </div>
 
-        <div className="grid w-full max-w-6xl grid-cols-3 gap-4 px-6 md:grid-cols-4 md:gap-5">
+        <div className="grid w-full max-w-6xl grid-cols-3 gap-2.5 px-4 md:grid-cols-7 md:gap-3">
           {items.map((it, i) => {
             const show = i < shown;
             return (
