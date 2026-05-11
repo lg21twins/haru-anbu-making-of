@@ -45,101 +45,25 @@ const messages: Msg[] = [
 ];
 
 function AttemptPreview({ kind }: { kind: 1 | 2 | 3 | 4 | 5 }) {
-  if (kind === 1) {
-    return (
-      <svg viewBox="0 0 100 100" className="h-full w-full">
-        <line x1="20" y1="20" x2="80" y2="20" stroke="white" strokeWidth="2" />
-        <line x1="20" y1="80" x2="80" y2="80" stroke="white" strokeWidth="2" />
-        <line x1="20" y1="20" x2="20" y2="80" stroke="white" strokeWidth="2" />
-        <line x1="80" y1="20" x2="80" y2="80" stroke="white" strokeWidth="2" />
-        <line x1="20" y1="20" x2="80" y2="80" stroke="white" strokeWidth="2" />
-        <line x1="80" y1="20" x2="20" y2="80" stroke="white" strokeWidth="2" />
-        <circle cx="20" cy="20" r="5" fill="white" />
-        <circle cx="80" cy="20" r="5" fill="white" />
-        <circle cx="20" cy="80" r="5" fill="white" />
-        <circle cx="80" cy="80" r="5" fill="white" />
-      </svg>
-    );
-  }
-  if (kind === 2) {
-    return (
-      <svg viewBox="0 0 100 100" className="h-full w-full">
-        <ellipse cx="50" cy="55" rx="32" ry="40" fill="#ffd76b" />
-        <circle cx="40" cy="50" r="3" fill="#1a1a1a" />
-        <circle cx="60" cy="50" r="3" fill="#1a1a1a" />
-        <path
-          d="M38 65 Q50 75 62 65"
-          stroke="#1a1a1a"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  if (kind === 3) {
-    return (
-      <svg viewBox="0 0 100 100" className="h-full w-full">
-        <rect x="42" y="15" width="16" height="50" fill="#ff5e5e" />
-        <rect x="20" y="32" width="60" height="16" fill="#ff5e5e" />
-        <path
-          d="M50 25 C 42 18, 32 25, 50 40 C 68 25, 58 18, 50 25"
-          fill="#ffd76b"
-        />
-        <circle cx="35" cy="80" r="6" fill="#2c7afc" />
-        <circle cx="50" cy="80" r="6" fill="#2c7afc" />
-        <circle cx="65" cy="80" r="6" fill="#2c7afc" />
-      </svg>
-    );
-  }
-  if (kind === 4) {
-    return (
-      <svg viewBox="0 0 100 100" className="h-full w-full">
-        <path
-          d="M15 50 Q35 25 50 50 T 85 50"
-          stroke="white"
-          strokeWidth="4"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <circle cx="15" cy="50" r="4" fill="white" />
-        <circle cx="85" cy="50" r="4" fill="white" />
-      </svg>
-    );
-  }
-  return <FinalLogo />;
+  if (kind === 5) return <FinalLogo />;
+  return (
+    <img
+      src={`/media/logo/attempt-${kind}.png`}
+      alt=""
+      className="h-full w-full object-contain"
+      draggable={false}
+    />
+  );
 }
 
 function FinalLogo() {
   return (
-    <svg viewBox="0 0 100 100" className="h-full w-full">
-      <line
-        x1="32"
-        y1="28"
-        x2="68"
-        y2="28"
-        stroke="#2c7afc"
-        strokeWidth="7"
-        strokeLinecap="round"
-      />
-      <line
-        x1="50"
-        y1="18"
-        x2="50"
-        y2="30"
-        stroke="#2c7afc"
-        strokeWidth="5"
-        strokeLinecap="round"
-      />
-      <circle
-        cx="50"
-        cy="63"
-        r="22"
-        fill="none"
-        stroke="#2c7afc"
-        strokeWidth="7"
-      />
-    </svg>
+    <img
+      src="/media/logo/final.svg"
+      alt="하루안부"
+      className="h-full w-full object-contain"
+      draggable={false}
+    />
   );
 }
 
