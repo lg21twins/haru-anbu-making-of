@@ -10,32 +10,60 @@ import { CountUpScene } from "@/components/scenes/CountUpScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
 
-const PersonasInterlude = dynamic(
-  () => import("@/components/scenes/PersonasInterlude").then((m) => m.PersonasInterlude)
+const ProblemDiscoveryScene = dynamic(() =>
+  import("@/components/scenes/ProblemDiscoveryScene").then(
+    (m) => m.ProblemDiscoveryScene
+  )
 );
-const JtbdInterlude = dynamic(
-  () => import("@/components/scenes/JtbdInterlude").then((m) => m.JtbdInterlude)
+const PersonasInterlude = dynamic(() =>
+  import("@/components/scenes/PersonasInterlude").then((m) => m.PersonasInterlude)
 );
-const MatrixInterlude = dynamic(
-  () => import("@/components/scenes/MatrixInterlude").then((m) => m.MatrixInterlude)
+const JtbdInterlude = dynamic(() =>
+  import("@/components/scenes/JtbdInterlude").then((m) => m.JtbdInterlude)
 );
-const BlueOceanInterlude = dynamic(
-  () => import("@/components/scenes/BlueOceanInterlude").then((m) => m.BlueOceanInterlude)
+const MatrixInterlude = dynamic(() =>
+  import("@/components/scenes/MatrixInterlude").then((m) => m.MatrixInterlude)
 );
-const FailuresInterlude = dynamic(
-  () => import("@/components/scenes/FailuresInterlude").then((m) => m.FailuresInterlude)
+const BlueOceanInterlude = dynamic(() =>
+  import("@/components/scenes/BlueOceanInterlude").then(
+    (m) => m.BlueOceanInterlude
+  )
 );
-const DesignIterationScene = dynamic(
-  () =>
-    import("@/components/scenes/DesignIterationScene").then(
-      (m) => m.DesignIterationScene
-    )
+const FailuresInterlude = dynamic(() =>
+  import("@/components/scenes/FailuresInterlude").then((m) => m.FailuresInterlude)
 );
-const LogoEvolutionScene = dynamic(
-  () =>
-    import("@/components/scenes/LogoEvolutionScene").then(
-      (m) => m.LogoEvolutionScene
-    )
+const DesignIterationScene = dynamic(() =>
+  import("@/components/scenes/DesignIterationScene").then(
+    (m) => m.DesignIterationScene
+  )
+);
+const LogoEvolutionScene = dynamic(() =>
+  import("@/components/scenes/LogoEvolutionScene").then(
+    (m) => m.LogoEvolutionScene
+  )
+);
+const AppBranchingScene = dynamic(() =>
+  import("@/components/scenes/AppBranchingScene").then(
+    (m) => m.AppBranchingScene
+  )
+);
+const CodeWorkflowScene = dynamic(() =>
+  import("@/components/scenes/CodeWorkflowScene").then(
+    (m) => m.CodeWorkflowScene
+  )
+);
+const PromptGrammarScene = dynamic(() =>
+  import("@/components/scenes/PromptGrammarScene").then(
+    (m) => m.PromptGrammarScene
+  )
+);
+const AIStackScene = dynamic(() =>
+  import("@/components/scenes/AIStackScene").then((m) => m.AIStackScene)
+);
+const DailyWorkflowScene = dynamic(() =>
+  import("@/components/scenes/DailyWorkflowScene").then(
+    (m) => m.DailyWorkflowScene
+  )
 );
 const VideoScene = dynamic(
   () => import("@/components/scenes/VideoScene").then((m) => m.VideoScene),
@@ -46,24 +74,27 @@ export function Scenes() {
   return (
     <main className="relative w-full bg-black text-white">
       <Suspense fallback={<div className="h-screen bg-black" />}>
-        {/* 01 — 커서 → 스크롤하면 첫 프롬프트가 박힘 (sticky) */}
+        {/* 01 — Opening */}
         <OpeningPromptScene />
 
-        {/* 03 — 누구를 위해 */}
+        {/* === 시작 === */}
+        <div id="nav-problem" className="block" />
+        <ProblemDiscoveryScene />
+
+        {/* === 리서치 === */}
+        <div id="nav-research" className="block" />
         <CommandScene
           id="s-cmd-who"
           text="누구를 위해 만들지부터 정해."
         />
         <PersonasInterlude />
 
-        {/* 04 — 그들이 원하는 것 */}
         <CommandScene
           id="s-cmd-jtbd"
           text="그들이 진짜 원하는 게 뭔지 찾아내."
         />
         <JtbdInterlude />
 
-        {/* 05 — 시장 */}
         <CommandScene
           id="s-cmd-market"
           text="시장에서 우리만 할 수 있는 게 뭔지도."
@@ -71,11 +102,15 @@ export function Scenes() {
         <MatrixInterlude />
         <BlueOceanInterlude />
 
-        {/* 06 — 로고 대화: 5 prompts → 진짜 로고 */}
+        {/* === 브랜드 === */}
+        <div id="nav-brand" className="block" />
         <LogoEvolutionScene />
 
-        {/* 07 — 디자인 시퀀스: 시작 prompt sticky + v1/v2/v3 + cascade + 이거야 + v13 */}
+        {/* === 디자인 === */}
+        <div id="nav-design" className="block" />
         <DesignIterationScene />
+        <AppBranchingScene />
+        <CodeWorkflowScene />
 
         {/* 자주 틀렸다 → 실패 갤러리 */}
         <LineScene
@@ -86,7 +121,8 @@ export function Scenes() {
         />
         <FailuresInterlude />
 
-        {/* 영상까지 */}
+        {/* === 영상 === */}
+        <div id="nav-video" className="block" />
         <CommandScene
           id="s-cmd-video"
           text="영상까지 가자."
@@ -133,7 +169,14 @@ export function Scenes() {
           hero
         />
 
-        {/* 결 — 숫자 */}
+        {/* === 방법 === */}
+        <div id="nav-method" className="block" />
+        <PromptGrammarScene />
+        <AIStackScene />
+        <DailyWorkflowScene />
+
+        {/* === 결산 === */}
+        <div id="nav-numbers" className="block" />
         <CountUpScene
           id="s-count-lines"
           to={3059}

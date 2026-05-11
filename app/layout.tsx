@@ -5,6 +5,7 @@ import { LenisProvider } from "@/components/providers/LenisProvider";
 import { ReducedMotionProvider } from "@/components/providers/ReducedMotionProvider";
 import { CustomCursor } from "@/components/effects/CustomCursor";
 import { NoiseLayer } from "@/components/effects/NoiseLayer";
+import { HamburgerNav } from "@/components/nav/HamburgerNav";
 
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
@@ -34,6 +35,7 @@ export default function RootLayout({
           <LenisProvider>
             <CustomCursor />
             <NoiseLayer />
+            <HamburgerNav />
             {children}
           </LenisProvider>
         </ReducedMotionProvider>
