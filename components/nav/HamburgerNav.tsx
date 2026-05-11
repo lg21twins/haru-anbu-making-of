@@ -59,20 +59,25 @@ export function HamburgerNav() {
 
       <nav
         className="fixed inset-0 z-[200] flex items-center"
-        style={{ pointerEvents: open ? "auto" : "none" }}
+        style={{ pointerEvents: "none" }}
         aria-hidden={!open}
       >
         <ul className="w-full px-10 md:px-20 lg:px-28">
           {items.map((item, i) => (
-            <li key={item.href} className="overflow-hidden">
+            <li
+              key={item.href}
+              className="overflow-hidden"
+              style={{ width: "fit-content" }}
+            >
               <a
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="block font-sans font-bold leading-[1.08] tracking-[-0.02em] text-white transition-colors duration-200 hover:text-[color:var(--color-key)]"
+                className="inline-block font-sans font-bold leading-[1.08] tracking-[-0.02em] text-white transition-colors duration-200 hover:text-[color:var(--color-key)]"
                 style={{
                   fontSize: "clamp(2.6rem, 7.8vw, 7.5rem)",
                   opacity: open ? 1 : 0,
                   transform: open ? "translateY(0)" : "translateY(110%)",
+                  pointerEvents: open ? "auto" : "none",
                   transition: `opacity 640ms cubic-bezier(0.2, 1, 0.4, 1) ${
                     open ? i * 55 + 140 : 0
                   }ms, transform 720ms cubic-bezier(0.2, 1, 0.4, 1) ${
