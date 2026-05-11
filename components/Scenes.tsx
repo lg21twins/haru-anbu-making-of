@@ -29,9 +29,6 @@ const BlueOceanInterlude = dynamic(() =>
     (m) => m.BlueOceanInterlude
   )
 );
-const FailuresInterlude = dynamic(() =>
-  import("@/components/scenes/FailuresInterlude").then((m) => m.FailuresInterlude)
-);
 const DesignIterationScene = dynamic(() =>
   import("@/components/scenes/DesignIterationScene").then(
     (m) => m.DesignIterationScene
@@ -65,6 +62,16 @@ const DailyWorkflowScene = dynamic(() =>
     (m) => m.DailyWorkflowScene
   )
 );
+const FailuresGalleryScene = dynamic(() =>
+  import("@/components/scenes/FailuresGalleryScene").then(
+    (m) => m.FailuresGalleryScene
+  )
+);
+const CompletedDesignsScene = dynamic(() =>
+  import("@/components/scenes/CompletedDesignsScene").then(
+    (m) => m.CompletedDesignsScene
+  )
+);
 const VideoScene = dynamic(
   () => import("@/components/scenes/VideoScene").then((m) => m.VideoScene),
   { ssr: false }
@@ -83,10 +90,7 @@ export function Scenes() {
 
         {/* === 리서치 === */}
         <div id="nav-research" className="block" />
-        <CommandScene
-          id="s-cmd-who"
-          text="누구를 위해 만들지부터 정해."
-        />
+        <CommandScene id="s-cmd-who" text="누구를 위해 만들지부터 정해." />
         <PersonasInterlude />
 
         <CommandScene
@@ -111,15 +115,6 @@ export function Scenes() {
         <DesignIterationScene />
         <AppBranchingScene />
         <CodeWorkflowScene />
-
-        {/* 자주 틀렸다 → 실패 갤러리 */}
-        <LineScene
-          id="s-wrong"
-          text="근데 자주 틀렸다."
-          size="huge"
-          color="text-[color:var(--color-key)]"
-        />
-        <FailuresInterlude />
 
         {/* === 영상 === */}
         <div id="nav-video" className="block" />
@@ -175,22 +170,51 @@ export function Scenes() {
         <AIStackScene />
         <DailyWorkflowScene />
 
+        {/* === 회고: 자주 틀렸다 → 실패 갤러리 → 숫자 → 완성 === */}
+        <LineScene
+          id="s-wrong"
+          text="근데 자주 틀렸다."
+          size="huge"
+          color="text-[color:var(--color-key)]"
+        />
+        <FailuresGalleryScene />
+
         {/* === 결산 === */}
         <div id="nav-numbers" className="block" />
         <CountUpScene
           id="s-count-lines"
-          to={3059}
+          to={12236}
           suffix="줄의 대화."
           format={(n) => n.toLocaleString()}
-          duration={2.4}
+          duration={2.6}
+        />
+        <CountUpScene
+          id="s-count-revisions"
+          to={612}
+          suffix="줄의 디자인 수정 명령."
+          format={(n) => n.toLocaleString()}
+          duration={1.8}
         />
         <CountUpScene
           id="s-count-prompts"
-          to={57}
-          suffix="번의 명령."
+          to={228}
+          suffix="번의 재제작 요청."
+          duration={1.6}
+        />
+        <CountUpScene
+          id="s-count-days"
+          to={106}
+          suffix="일간의 대장정."
           duration={1.4}
         />
-        <CountUpScene id="s-count-days" to={55} suffix="일." duration={1.2} />
+
+        {/* 전환 → 완성된 디자인들 */}
+        <LineScene
+          id="s-team-line"
+          text="저희 팀은 우리가 원하는 디자인을 구현하였습니다."
+          size="large"
+        />
+        <CompletedDesignsScene />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         <FinalScene />

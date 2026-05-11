@@ -18,15 +18,12 @@ const credits: Line[] = [
   { kind: "title", text: "하루안부." },
   { kind: "spacer", h: 14 },
 
-  { kind: "section", text: "DIRECTED BY" },
+  { kind: "section", text: "TEAM" },
   { kind: "name", text: "김지욱" },
-  { kind: "spacer", h: 9 },
-
-  { kind: "section", text: "WRITTEN BY" },
-  { kind: "name", text: "김지욱" },
-  { kind: "name", text: "하루안부 팀" },
+  { kind: "name", text: "손예찬" },
+  { kind: "name", text: "고해은" },
   { kind: "name", text: "Claude" },
-  { kind: "spacer", h: 9 },
+  { kind: "spacer", h: 12 },
 
   { kind: "section", text: "CAST" },
   { kind: "role", role: "보호자", name: "김미영, 52" },
@@ -259,15 +256,11 @@ const credits: Line[] = [
   { kind: "spacer", h: 14 },
 ];
 
-const ANIMATION_DURATION_S = 100;
-const TRIGGER_THRESHOLD = 0.75;
-
-type LenisLike = { stop: () => void; start: () => void };
+const ANIMATION_DURATION_S = 70;
 
 export function CreditsScene() {
   const sectionRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -275,105 +268,51 @@ export function CreditsScene() {
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting && e.intersectionRatio >= TRIGGER_THRESHOLD) {
+          if (e.isIntersecting) {
             setActive(true);
             io.disconnect();
             break;
           }
         }
       },
-      { threshold: [TRIGGER_THRESHOLD, 1] }
+      { threshold: 0.05, rootMargin: "0px 0px -10% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (!active || done) return;
-    const win = window as unknown as { __lenis?: LenisLike };
-    const lenis = win.__lenis;
-    const prevOverflow = document.body.style.overflow;
-    const prevTouch = document.body.style.touchAction;
-
-    lenis?.stop();
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
-    const release = () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouch;
-      lenis?.start();
-      setDone(true);
-    };
-
-    const timer = window.setTimeout(release, ANIMATION_DURATION_S * 1000);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        window.clearTimeout(timer);
-        release();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouch;
-      lenis?.start();
-    };
-  }, [active, done]);
-
-  const playing = active && !done;
-
   return (
     <section
       ref={sectionRef}
       id="s-credits"
-      className="relative h-screen w-full overflow-hidden bg-black"
+      className="relative w-full"
+      style={{ height: "240vh" }}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black to-transparent"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-black to-transparent"
-      />
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-black to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-black to-transparent"
+        />
 
-      <div
-        className="absolute inset-x-0 mx-auto max-w-3xl px-6 text-center md:px-12"
-        style={{
-          animation: playing
-            ? `credit-roll ${ANIMATION_DURATION_S}s linear forwards`
-            : undefined,
-          transform: done
-            ? "translateY(calc(-100% - 12vh))"
-            : "translateY(100vh)",
-          willChange: "transform",
-        }}
-      >
-        {credits.map((line, i) => (
-          <CreditLine key={i} line={line} />
-        ))}
-      </div>
-
-      {playing && (
-        <button
-          type="button"
-          onClick={() => {
-            const win = window as unknown as { __lenis?: LenisLike };
-            document.body.style.overflow = "";
-            document.body.style.touchAction = "";
-            win.__lenis?.start();
-            setDone(true);
+        <div
+          className="absolute inset-x-0 mx-auto max-w-3xl px-6 text-center md:px-12"
+          style={{
+            animation: active
+              ? `credit-roll ${ANIMATION_DURATION_S}s linear forwards`
+              : undefined,
+            transform: "translateY(40vh)",
+            willChange: "transform",
           }}
-          data-cursor="link"
-          className="absolute right-6 top-6 z-30 rounded-full border border-white/15 bg-black/40 px-4 py-2 font-mono text-[10px] tracking-[0.3em] text-white/65 backdrop-blur-sm transition-colors hover:border-[color:var(--color-key)]/60 hover:text-[color:var(--color-key)] md:right-10 md:top-10 md:text-xs"
         >
-          SKIP ↓
-        </button>
-      )}
+          {credits.map((line, i) => (
+            <CreditLine key={i} line={line} />
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

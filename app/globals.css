@@ -269,7 +269,7 @@ body.has-custom-cursor textarea {
 
 /* ─── film credits roll ─────────────────────────────────────────── */
 @keyframes credit-roll {
-  from { transform: translateY(100vh); }
+  from { transform: translateY(40vh); }
   to { transform: translateY(calc(-100% - 12vh)); }
 }
 
