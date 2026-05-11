@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 
 const items = [
-  { href: "#nav-problem", label: "시작" },
-  { href: "#nav-research", label: "리서치" },
-  { href: "#nav-brand", label: "브랜드" },
-  { href: "#nav-design", label: "디자인" },
-  { href: "#nav-video", label: "영상" },
-  { href: "#nav-method", label: "방법" },
-  { href: "#nav-numbers", label: "결산" },
+  { href: "#nav-problem", label: "Origin" },
+  { href: "#nav-research", label: "Research" },
+  { href: "#nav-brand", label: "Brand" },
+  { href: "#nav-design", label: "Iteration" },
+  { href: "#nav-video", label: "Film" },
+  { href: "#nav-method", label: "Method" },
+  { href: "#nav-numbers", label: "Numbers" },
 ];
 
 export function HamburgerNav() {
@@ -30,16 +30,16 @@ export function HamburgerNav() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
         aria-expanded={open}
-        className="fixed left-5 top-5 z-[210] grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-black/50 backdrop-blur-xl transition-colors hover:border-[color:var(--color-key)]/70"
+        className="fixed left-5 top-5 z-[210] grid h-12 w-12 place-items-center"
       >
         <img
           src="/cursor-haru.svg"
           alt=""
-          className="h-7 w-7"
+          className="h-9 w-9"
           style={{
             transform: open ? "rotate(90deg)" : "rotate(0deg)",
             transition: "transform 520ms cubic-bezier(0.2, 1, 0.4, 1)",
-            filter: "drop-shadow(0 0 8px rgba(126, 255, 141, 0.45))",
+            filter: "drop-shadow(0 0 10px rgba(126, 255, 141, 0.55))",
           }}
         />
       </button>
