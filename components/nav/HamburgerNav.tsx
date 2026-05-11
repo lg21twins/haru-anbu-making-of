@@ -74,7 +74,7 @@ export function HamburgerNav() {
                 onClick={() => setOpen(false)}
                 className="inline-block font-sans font-bold leading-[1.08] tracking-[-0.02em] text-white transition-colors duration-200 hover:text-[color:var(--color-key)]"
                 style={{
-                  fontSize: "clamp(3.2rem, 9vw, 9rem)",
+                  fontSize: "clamp(2.2rem, 6.4vw, 6rem)",
                   opacity: open ? 1 : 0,
                   transform: open ? "translateY(0)" : "translateY(110%)",
                   pointerEvents: open ? "auto" : "none",
