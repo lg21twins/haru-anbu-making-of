@@ -1,91 +1,215 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-const TOTAL_VH = 720;
+type Msg = {
+  role: "me" | "ai";
+  text: string;
+  attempt?: 1 | 2 | 3 | 4 | 5;
+};
 
-const stages = [
+const messages: Msg[] = [
+  { role: "me", text: "우리 기획서를 가지고 로고 만들어봐." },
   {
-    prompt: "우리 기획서 가지고 로고 만들어봐.",
-    src: "/media/logo/logo-1.png",
-    label: "벤다이어그램 — 컨셉 다이어그램, 로고는 아님.",
+    role: "ai",
+    text:
+      "네. 하루안부의 핵심 가치 '연결'을 시각화해서 4개 노드가 사선으로 이어지는 다이어그램으로 만들어봤습니다.",
+    attempt: 1,
   },
+  { role: "me", text: "아니, 이건 로고가 아니라 다이어그램이잖아. 다시." },
   {
-    prompt: "아니, 이건 로고가 아니라 다이어그램이잖아. 다시.",
-    src: "/media/logo/logo-2.png",
-    label: "해님 캐릭터 — 따뜻한데 의료에 안 어울림.",
+    role: "ai",
+    text:
+      "네. 친근감을 위해 시니어 캐릭터 일러스트를 중앙에 배치해봤습니다.",
+    attempt: 2,
   },
+  { role: "me", text: "캐릭터 같아. 의료 신뢰감이 없어. 다시." },
   {
-    prompt: "캐릭터 같아. 의료 신뢰감이 없어. 다시.",
-    src: "/media/logo/logo-3.png",
-    label: "추상 매듭 — 색이 너무 많고 시각이 무거움.",
+    role: "ai",
+    text: "네. 의료 십자가 + 하트 + 가족 실루엣을 합쳐서 만들었습니다.",
+    attempt: 3,
   },
+  { role: "me", text: "색이 너무 많아 무거워. 단순하게 다시." },
   {
-    prompt: "색이 너무 많아 무거워. 단순하게 다시.",
-    src: "/media/logo/logo-4.png",
-    label: "말풍선+하트 — 기능 그대로 합친 셈, 평범.",
+    role: "ai",
+    text: "네. 단일 곡선으로 사람과 사람을 잇는 모양만 남겼습니다.",
+    attempt: 4,
   },
+  { role: "me", text: "기능 그대로네. 시그니처 한 곡선으로 가자." },
   {
-    prompt: "기능 그대로네. 시그니처 한 곡선으로 가자.",
-    src: null,
-    label: "심볼 — 두 곡선의 흐름.",
+    role: "ai",
+    text:
+      "네. '안부'의 ㅎ에서 영감을 받아 한 번에 그리는 곡선 심볼로 단순화했습니다.",
+    attempt: 5,
   },
 ];
 
-const phases: [number, number][] = [
-  [0.04, 0.20],
-  [0.20, 0.36],
-  [0.36, 0.52],
-  [0.52, 0.68],
-  [0.68, 0.84],
-];
+function AttemptPreview({ kind }: { kind: 1 | 2 | 3 | 4 | 5 }) {
+  if (kind === 1) {
+    return (
+      <svg viewBox="0 0 100 100" className="h-full w-full">
+        <line x1="20" y1="20" x2="80" y2="20" stroke="white" strokeWidth="2" />
+        <line x1="20" y1="80" x2="80" y2="80" stroke="white" strokeWidth="2" />
+        <line x1="20" y1="20" x2="20" y2="80" stroke="white" strokeWidth="2" />
+        <line x1="80" y1="20" x2="80" y2="80" stroke="white" strokeWidth="2" />
+        <line x1="20" y1="20" x2="80" y2="80" stroke="white" strokeWidth="2" />
+        <line x1="80" y1="20" x2="20" y2="80" stroke="white" strokeWidth="2" />
+        <circle cx="20" cy="20" r="5" fill="white" />
+        <circle cx="80" cy="20" r="5" fill="white" />
+        <circle cx="20" cy="80" r="5" fill="white" />
+        <circle cx="80" cy="80" r="5" fill="white" />
+      </svg>
+    );
+  }
+  if (kind === 2) {
+    return (
+      <svg viewBox="0 0 100 100" className="h-full w-full">
+        <ellipse cx="50" cy="55" rx="32" ry="40" fill="#ffd76b" />
+        <circle cx="40" cy="50" r="3" fill="#1a1a1a" />
+        <circle cx="60" cy="50" r="3" fill="#1a1a1a" />
+        <path
+          d="M38 65 Q50 75 62 65"
+          stroke="#1a1a1a"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === 3) {
+    return (
+      <svg viewBox="0 0 100 100" className="h-full w-full">
+        <rect x="42" y="15" width="16" height="50" fill="#ff5e5e" />
+        <rect x="20" y="32" width="60" height="16" fill="#ff5e5e" />
+        <path
+          d="M50 25 C 42 18, 32 25, 50 40 C 68 25, 58 18, 50 25"
+          fill="#ffd76b"
+        />
+        <circle cx="35" cy="80" r="6" fill="#2c7afc" />
+        <circle cx="50" cy="80" r="6" fill="#2c7afc" />
+        <circle cx="65" cy="80" r="6" fill="#2c7afc" />
+      </svg>
+    );
+  }
+  if (kind === 4) {
+    return (
+      <svg viewBox="0 0 100 100" className="h-full w-full">
+        <path
+          d="M15 50 Q35 25 50 50 T 85 50"
+          stroke="white"
+          strokeWidth="4"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <circle cx="15" cy="50" r="4" fill="white" />
+        <circle cx="85" cy="50" r="4" fill="white" />
+      </svg>
+    );
+  }
+  return <FinalLogo />;
+}
 
-const FINAL_REVEAL_START = 0.78;
-const FINAL_FULL = 0.86;
-const THATS_IT_START = 0.88;
-const THATS_IT_END = 0.97;
+function FinalLogo() {
+  return (
+    <svg viewBox="0 0 100 100" className="h-full w-full">
+      <line
+        x1="32"
+        y1="28"
+        x2="68"
+        y2="28"
+        stroke="#2c7afc"
+        strokeWidth="7"
+        strokeLinecap="round"
+      />
+      <line
+        x1="50"
+        y1="18"
+        x2="50"
+        y2="30"
+        stroke="#2c7afc"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="50"
+        cy="63"
+        r="22"
+        fill="none"
+        stroke="#2c7afc"
+        strokeWidth="7"
+      />
+    </svg>
+  );
+}
 
-function fadeBetween(
-  p: number,
-  fadeIn: number,
-  full: number,
-  fadeOutStart: number,
-  end: number
-): number {
-  if (p < fadeIn) return 0;
-  if (p < full) return (p - fadeIn) / (full - fadeIn);
-  if (p < fadeOutStart) return 1;
-  if (p < end) return 1 - (p - fadeOutStart) / (end - fadeOutStart);
-  return 0;
+function ChatBubble({ msg, show }: { msg: Msg; show: boolean }) {
+  const isMe = msg.role === "me";
+  return (
+    <div
+      className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+      style={{
+        maxHeight: show ? "640px" : "0px",
+        opacity: show ? 1 : 0,
+        marginBottom: show ? "1.25rem" : "0px",
+        transform: show ? "translateY(0)" : "translateY(14px)",
+        overflow: "hidden",
+        transition:
+          "max-height 560ms cubic-bezier(0.2, 1, 0.4, 1), opacity 420ms cubic-bezier(0.2, 1, 0.4, 1) 60ms, margin-bottom 560ms cubic-bezier(0.2, 1, 0.4, 1), transform 520ms cubic-bezier(0.2, 1, 0.4, 1)",
+      }}
+    >
+      <div
+        className={`max-w-[82%] rounded-2xl px-5 py-3 font-sans text-[15px] leading-relaxed md:text-base ${
+          isMe
+            ? "bg-[color:var(--color-key)] text-black"
+            : "border border-white/10 bg-white/[0.04] text-white/90"
+        }`}
+      >
+        <p>{msg.text}</p>
+        {msg.attempt && (
+          <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-4">
+            <div className="mx-auto aspect-square w-[120px]">
+              <AttemptPreview kind={msg.attempt} />
+            </div>
+            <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
+              attempt 0{msg.attempt}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function LogoEvolutionScene() {
-  const outerRef = useRef<HTMLElement>(null);
-  const [progress, setProgress] = useState(0);
-  const ticking = useRef(false);
+  const ref = useRef<HTMLElement>(null);
+  const [p, setP] = useState(0);
+  const [visibleMsgs, setVisibleMsgs] = useState(0);
 
   useEffect(() => {
-    const el = outerRef.current;
+    const el = ref.current;
     if (!el) return;
+
+    let ticking = false;
     const compute = () => {
       const rect = el.getBoundingClientRect();
       const range = el.offsetHeight - window.innerHeight;
-      if (range <= 0) {
-        setProgress(0);
-        return;
-      }
       const scrolled = Math.max(0, Math.min(range, -rect.top));
-      setProgress(scrolled / range);
+      const progress = range > 0 ? scrolled / range : 0;
+      setP(progress);
+      const t = Math.max(0, Math.min(1, (progress - 0.03) / 0.55));
+      setVisibleMsgs(Math.round(t * messages.length));
     };
+
     const onScroll = () => {
-      if (ticking.current) return;
-      ticking.current = true;
+      if (ticking) return;
+      ticking = true;
       requestAnimationFrame(() => {
         compute();
-        ticking.current = false;
+        ticking = false;
       });
     };
+
     compute();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", compute);
@@ -95,212 +219,88 @@ export function LogoEvolutionScene() {
     };
   }, []);
 
-  const p = progress;
-
-  let currentIdx = -1;
-  for (let i = 0; i < phases.length; i++) {
-    if (p >= phases[i][0] && p < phases[i][1]) {
-      currentIdx = i;
-      break;
-    }
-  }
-  if (currentIdx === -1 && p >= phases[phases.length - 1][1]) {
-    currentIdx = phases.length - 1;
-  }
-
-  const cardLogoOps = phases.slice(0, 4).map((_, i) => {
-    const [a, b] = phases[i];
-    return fadeBetween(p, a, a + 0.03, b - 0.03, b);
-  });
-
-  const finalOp = fadeBetween(p, FINAL_REVEAL_START, FINAL_FULL, 1.5, 2);
-  const cardOp = 1 - finalOp;
-  const thatsItOp = fadeBetween(p, THATS_IT_START, THATS_IT_START + 0.02, THATS_IT_END - 0.03, THATS_IT_END);
+  const chatOpacity = p < 0.6 ? 1 : Math.max(0, 1 - (p - 0.6) / 0.05);
+  const igeodaOpacity =
+    p < 0.65
+      ? 0
+      : p < 0.72
+      ? (p - 0.65) / 0.07
+      : p < 0.8
+      ? 1
+      : Math.max(0, 1 - (p - 0.8) / 0.04);
+  const logoOpacity = p < 0.8 ? 0 : Math.min(1, (p - 0.8) / 0.04);
+  const zoomP = Math.max(0, Math.min(1, (p - 0.88) / 0.12));
+  const logoScale = 1 + zoomP * 14;
+  const blueOpacity = Math.max(0, Math.min(1, (p - 0.9) / 0.1));
 
   return (
-    <section
-      id="s-logo"
-      ref={outerRef}
-      className="relative w-full"
-      style={{ height: `${TOTAL_VH}vh` }}
-    >
-      <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-black">
-        {/* main: chat thread (left) + logo (right) */}
-        <div className="absolute inset-0 grid grid-cols-1 items-center gap-8 px-6 pt-20 pb-20 md:grid-cols-[1fr_1.05fr] md:gap-14 md:px-16 md:pt-24 md:pb-24">
-          {/* chat thread */}
-          <div className="relative flex h-full max-h-[64vh] flex-col justify-end overflow-hidden">
-            <div className="flex flex-col gap-3 md:gap-4">
-              {stages.map((s, i) => {
-                const dist = currentIdx - i;
-                const visible = i <= currentIdx;
-                const isCurrent = i === currentIdx;
-                const opacity = !visible
-                  ? 0
-                  : isCurrent
-                    ? 1
-                    : Math.max(0.18, 0.55 - dist * 0.12);
-                const size = isCurrent ? "1.0" : "0.86";
-                return (
-                  <p
-                    key={i}
-                    className="font-mono leading-[1.3] text-white transition-all duration-700 ease-out"
-                    style={{
-                      opacity,
-                      fontSize: isCurrent
-                        ? "clamp(1.15rem, 1.85vw, 1.85rem)"
-                        : "clamp(0.9rem, 1.2vw, 1.25rem)",
-                      transform: `scale(${size})`,
-                      transformOrigin: "left bottom",
-                      color: isCurrent ? "#ffffff" : "rgba(255,255,255,0.65)",
-                    }}
-                  >
-                    <span className="text-[color:var(--color-key)]">&gt; </span>
-                    {s.prompt}
-                    {isCurrent && finalOp < 0.5 && (
-                      <span className="caret" aria-hidden />
-                    )}
-                  </p>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* logo display (right) */}
-          <div className="relative flex items-center justify-center">
-            {/* phases 1-4 white card with PNG */}
-            <div
-              className="relative"
-              style={{
-                width: "min(440px, 80vw)",
-                aspectRatio: "1 / 1",
-                opacity: cardOp,
-                transition: "opacity 350ms linear",
-              }}
-            >
-              {stages.slice(0, 4).map((s, i) => (
-                <div
-                  key={i}
-                  className="absolute inset-0 flex items-center justify-center rounded-3xl bg-white"
-                  style={{
-                    opacity: cardLogoOps[i],
-                    transition: "opacity 220ms linear",
-                    boxShadow:
-                      "0 30px 80px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset",
-                  }}
-                >
-                  <div className="relative h-[86%] w-[86%]">
-                    {s.src && (
-                      <Image
-                        src={s.src}
-                        alt={s.label}
-                        fill
-                        sizes="(max-width: 768px) 78vw, 440px"
-                        className="object-contain"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* final brand logo reveal — replaces card */}
-            {finalOp > 0 && (
-              <div
-                className="absolute inset-0 flex flex-col items-center justify-center"
-                style={{
-                  opacity: finalOp,
-                  transform: `scale(${0.88 + finalOp * 0.12})`,
-                  transition: "transform 260ms ease-out",
-                }}
-              >
-                <FinalSymbol />
-                <p
-                  className="mt-6 font-sans font-bold leading-none tracking-tight text-white"
-                  style={{ fontSize: "clamp(1.8rem, 3.4vw, 3rem)" }}
-                >
-                  하루안부
-                </p>
-                <p className="mt-3 font-sans text-xs text-white/50 md:text-sm">
-                  오늘 하루도, 안녕하셨습니다
-                </p>
-              </div>
-            )}
-
-            {/* 이거다. overlay */}
-            {thatsItOp > 0 && (
-              <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                style={{ opacity: thatsItOp }}
-              >
-                <p
-                  className="font-sans font-bold text-[color:var(--color-key)]"
-                  style={{
-                    fontSize: "clamp(3rem, 9vw, 9rem)",
-                    filter: "drop-shadow(0 0 36px rgba(126,255,141,0.55))",
-                  }}
-                >
-                  이거다.
-                </p>
-              </div>
-            )}
+    <section ref={ref} className="relative w-full" style={{ height: "1100vh" }}>
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-black">
+        {/* 채팅 thread */}
+        <div
+          className="absolute inset-0 flex items-end justify-center px-6 pb-[10vh] pt-[10vh] md:px-10"
+          style={{
+            opacity: chatOpacity,
+            transition: "opacity 400ms ease-out",
+            pointerEvents: chatOpacity < 0.5 ? "none" : "auto",
+          }}
+        >
+          <div
+            className="flex w-full max-w-2xl flex-col justify-end overflow-hidden"
+            style={{ maxHeight: "80vh" }}
+          >
+            {messages.map((m, i) => (
+              <ChatBubble key={i} msg={m} show={i < visibleMsgs} />
+            ))}
           </div>
         </div>
 
-        <footer className="absolute inset-x-0 bottom-10 z-20 flex items-center justify-end px-6 md:bottom-14 md:px-12">
-          <Progress idx={currentIdx} reveal={finalOp > 0.5} />
-        </footer>
-      </div>
-    </section>
-  );
-}
+        {/* "이거다." */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ opacity: igeodaOpacity, pointerEvents: "none" }}
+        >
+          <p
+            className="font-sans font-bold text-white"
+            style={{
+              fontSize: "clamp(3rem, 10vw, 10rem)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            이거다.
+          </p>
+        </div>
 
-function FinalSymbol() {
-  return (
-    <svg
-      viewBox="0 0 512 512"
-      width="min(40vw, 300px)"
-      height="min(40vw, 300px)"
-      style={{
-        filter:
-          "drop-shadow(0 0 60px rgba(44, 122, 252, 0.55)) drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5))",
-      }}
-    >
-      <g transform="translate(50, 50) scale(0.163)">
-        <path
-          d="M2521.32 2506.66C1239.65 2657.48 1239.65 1895.6 1239.65 1279.34L2497.69 0.000170058C2518.68 494.198 2522.27 1157.92 1658.86 1262.48C2641.88 1314.25 2521.32 2101.84 2521.32 2506.66Z"
-          fill="#2C7AFC"
-        />
-        <path
-          d="M4.6772 19.3353C1286.35 -131.481 1286.35 630.399 1286.35 1246.66L28.3145 2526C7.32194 2031.8 3.73014 1368.08 867.143 1263.52C-115.881 1211.75 4.6772 424.157 4.6772 19.3353Z"
-          fill="#2C7AFC"
-        />
-      </g>
-    </svg>
-  );
-}
+        {/* 센터 로고 + 줌 */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ opacity: logoOpacity, pointerEvents: "none" }}
+        >
+          <div
+            className="h-[40vh] w-[40vh]"
+            style={{
+              maxHeight: "440px",
+              maxWidth: "440px",
+              transform: `scale(${logoScale})`,
+              transformOrigin: "center center",
+              filter: `drop-shadow(0 0 ${20 + zoomP * 80}px rgba(44, 122, 252, ${0.4 + zoomP * 0.4}))`,
+              transition: "filter 60ms linear",
+            }}
+          >
+            <FinalLogo />
+          </div>
+        </div>
 
-function Progress({ idx, reveal }: { idx: number; reveal: boolean }) {
-  const total = 5;
-  const active = reveal ? total - 1 : Math.max(0, idx);
-  return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className="block h-[2px] transition-all duration-500"
+        {/* 블루 wash */}
+        <div
+          className="absolute inset-0"
           style={{
-            width: i === active ? "32px" : "12px",
-            background:
-              i === active
-                ? "var(--color-key)"
-                : i < active
-                  ? "rgba(126,255,141,0.45)"
-                  : "rgba(255,255,255,0.18)",
-            boxShadow:
-              i === active ? "0 0 10px rgba(126,255,141,0.6)" : "none",
+            background: "#2c7afc",
+            opacity: blueOpacity,
+            pointerEvents: "none",
           }}
         />
-      ))}
-    </div>
+      </div>
+    </section>
   );
 }
