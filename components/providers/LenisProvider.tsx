@@ -24,6 +24,8 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
+    (window as unknown as { __lenis?: Lenis }).__lenis = lenis;
+
     const scrollToHash = () => {
       const hash = window.location.hash;
       if (!hash || hash === "#") return;
@@ -58,6 +60,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("hashchange", scrollToHash);
       document.removeEventListener("click", onAnchorClick);
       gsap.ticker.remove(tick);
+      delete (window as unknown as { __lenis?: Lenis }).__lenis;
       lenis.destroy();
     };
   }, []);
