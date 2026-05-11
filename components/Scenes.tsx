@@ -135,19 +135,19 @@ export function Scenes() {
 
         {/* 결 — 숫자 */}
         <CountUpScene
-          id="s-count-1845"
-          to={1845}
+          id="s-count-lines"
+          to={3059}
           suffix="줄의 대화."
           format={(n) => n.toLocaleString()}
-          duration={2.2}
+          duration={2.4}
         />
         <CountUpScene
-          id="s-count-76"
-          to={76}
+          id="s-count-prompts"
+          to={57}
           suffix="번의 명령."
           duration={1.4}
         />
-        <CountUpScene id="s-count-28" to={28} suffix="일." duration={1.2} />
+        <CountUpScene id="s-count-days" to={55} suffix="일." duration={1.2} />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         <FinalScene />
