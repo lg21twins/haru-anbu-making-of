@@ -140,16 +140,22 @@ export function OpeningPromptScene() {
 
     const start = () => {
       if (startedRef.current) return;
-      // 새로고침 등으로 페이지 중간에서 시작하면 인트로 스킵
-      if (window.scrollY > 80) {
-        setChars(fullText.length);
-        return;
-      }
       startedRef.current = true;
       lock();
       lastFrameRef.current = 0;
       rafRef.current = requestAnimationFrame(tick);
     };
+
+    // 브라우저 스크롤 복원이 켜져있으면 오프닝이 스킵돼 보이는 문제 방지
+    let prevRestoration: ScrollRestoration | null = null;
+    if ("scrollRestoration" in history) {
+      prevRestoration = history.scrollRestoration;
+      history.scrollRestoration = "manual";
+    }
+    // 페이지 첫 진입은 항상 최상단에서 시작 — 해시가 없을 때만
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
 
     const initTimer = window.setTimeout(start, START_DELAY_MS);
 
@@ -158,6 +164,9 @@ export function OpeningPromptScene() {
       if (dwellTimerRef.current) window.clearTimeout(dwellTimerRef.current);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       unlock();
+      if (prevRestoration && "scrollRestoration" in history) {
+        history.scrollRestoration = prevRestoration;
+      }
       audioCtxRef.current?.close().catch(() => {});
       audioCtxRef.current = null;
     };
