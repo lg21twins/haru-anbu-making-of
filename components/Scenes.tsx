@@ -39,11 +39,6 @@ const LogoEvolutionScene = dynamic(() =>
     (m) => m.LogoEvolutionScene
   )
 );
-const AppBranchingScene = dynamic(() =>
-  import("@/components/scenes/AppBranchingScene").then(
-    (m) => m.AppBranchingScene
-  )
-);
 const CodeWorkflowScene = dynamic(() =>
   import("@/components/scenes/CodeWorkflowScene").then(
     (m) => m.CodeWorkflowScene
@@ -113,7 +108,6 @@ export function Scenes() {
         {/* === 디자인 === */}
         <div id="nav-design" className="block" />
         <DesignIterationScene />
-        <AppBranchingScene />
         <CodeWorkflowScene />
 
         {/* === 영상 === */}
