@@ -91,11 +91,8 @@ export function AIStackScene() {
     <section ref={ref} className="relative w-full" style={{ height: "520vh" }}>
       <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black">
         <div className="mb-10 px-6 text-center md:mb-12">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
-            ai stack
-          </p>
           <h2
-            className="mt-2 font-sans font-semibold text-white"
+            className="font-sans font-semibold text-white"
             style={{ fontSize: "clamp(1.6rem, 3vw, 2.6rem)" }}
           >
             어떤 AI가 어디서 일했나.

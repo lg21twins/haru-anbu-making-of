@@ -51,10 +51,6 @@ export function ProblemDiscoveryScene() {
     <section ref={ref} className="relative w-full" style={{ height: "520vh" }}>
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-black">
         <div className="mx-auto w-full max-w-4xl px-6 md:px-10">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-white/30">
-            chapter 01 — 시작
-          </div>
-
           <div className="mb-10 flex items-start gap-3">
             <span className="mt-3 inline-block h-2 w-2 shrink-0 rounded-full bg-[color:var(--color-key)] shadow-[0_0_12px_var(--color-key-glow)]" />
             <p

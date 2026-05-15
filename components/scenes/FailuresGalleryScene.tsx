@@ -93,11 +93,8 @@ export function FailuresGalleryScene() {
   return (
     <section className="relative w-full bg-[#0a0908] py-24 md:py-32">
       <div className="mx-auto mb-14 max-w-6xl px-6 text-center md:mb-20">
-        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-key)]/60">
-          wall of mistakes
-        </p>
         <h2
-          className="mt-2 font-sans font-semibold text-white"
+          className="font-sans font-semibold text-white"
           style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)" }}
         >
           수십 번의 <span className="text-[color:var(--color-key)]">다시.</span>
