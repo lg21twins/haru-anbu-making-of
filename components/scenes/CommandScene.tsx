@@ -1,6 +1,5 @@
 "use client";
 
-import { Scene } from "./Scene";
 import { TypeText } from "./TypeText";
 
 type Props = {
@@ -10,23 +9,27 @@ type Props = {
 };
 
 const sizeMap = {
-  huge: "clamp(2.6rem, 7vw, 6.5rem)",
-  large: "clamp(2.2rem, 5.5vw, 5rem)",
-  medium: "clamp(1.6rem, 3.4vw, 3rem)",
+  huge: "clamp(1.8rem, 4.6vw, 5rem)",
+  large: "clamp(1.5rem, 3.8vw, 4rem)",
+  medium: "clamp(1.2rem, 2.6vw, 2.6rem)",
 };
 
 export function CommandScene({ id, text, size = "large" }: Props) {
   return (
-    <Scene id={id} height="screen" bg="bg-black">
-      <div className="w-full px-6 md:px-16">
+    <section
+      id={id}
+      className="relative w-full bg-black"
+      style={{ height: "180vh" }}
+    >
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-16">
         <p
-          className="max-w-6xl font-mono leading-[1.18] text-white"
+          className="whitespace-nowrap font-mono leading-[1.18] text-white"
           style={{ fontSize: sizeMap[size] }}
         >
           <span className="text-[color:var(--color-key)]">&gt; </span>
           <TypeText text={text} speed={50} startDelay={350} />
         </p>
       </div>
-    </Scene>
+    </section>
   );
 }

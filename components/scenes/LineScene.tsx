@@ -1,6 +1,5 @@
 "use client";
 
-import { Scene } from "./Scene";
 import { TypeText } from "./TypeText";
 
 type Props = {
@@ -15,9 +14,9 @@ type Props = {
 };
 
 const sizeMap = {
-  huge: "clamp(3rem, 9vw, 9rem)",
-  large: "clamp(2.4rem, 6vw, 5.5rem)",
-  medium: "clamp(1.8rem, 4vw, 3.6rem)",
+  huge: "clamp(2.4rem, 7vw, 7rem)",
+  large: "clamp(1.6rem, 4.2vw, 4.4rem)",
+  medium: "clamp(1.3rem, 3vw, 3rem)",
 };
 
 export function LineScene({
@@ -31,15 +30,21 @@ export function LineScene({
   cursor = false,
 }: Props) {
   return (
-    <Scene id={id} height="screen" bg={bg}>
-      <div className="w-full px-6 md:px-16">
+    <section
+      id={id}
+      className={`relative w-full ${bg}`}
+      style={{ height: "180vh" }}
+    >
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden px-6 md:px-16">
         <p
-          className={`text-center ${font === "mono" ? "font-mono" : "font-sans"} font-semibold leading-[1.02] tracking-tight ${color}`}
+          className={`whitespace-nowrap text-center ${
+            font === "mono" ? "font-mono" : "font-sans"
+          } font-semibold leading-[1.02] tracking-tight ${color}`}
           style={{ fontSize: sizeMap[size] }}
         >
           <TypeText text={text} speed={speed} startDelay={300} cursor={cursor} />
         </p>
       </div>
-    </Scene>
+    </section>
   );
 }
