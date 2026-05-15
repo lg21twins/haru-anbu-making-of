@@ -12,16 +12,49 @@ const items = [
   { href: "#nav-numbers", label: "Numbers" },
 ];
 
+function HaruSymbol({ color }: { color: string }) {
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-9 w-9"
+      style={{
+        transition: "color 600ms cubic-bezier(0.2, 1, 0.4, 1)",
+        color,
+        filter: `drop-shadow(0 0 10px ${color}88)`,
+      }}
+    >
+      <g transform="translate(50, 50) scale(0.163)" fill="currentColor">
+        <path d="M2521.32 2506.66C1239.65 2657.48 1239.65 1895.6 1239.65 1279.34L2497.69 0.000170058C2518.68 494.198 2522.27 1157.92 1658.86 1262.48C2641.88 1314.25 2521.32 2101.84 2521.32 2506.66Z" />
+        <path d="M4.6772 19.3353C1286.35 -131.481 1286.35 630.399 1286.35 1246.66L28.3145 2526C7.32194 2031.8 3.73014 1368.08 867.143 1263.52C-115.881 1211.75 4.6772 424.157 4.6772 19.3353Z" />
+      </g>
+    </svg>
+  );
+}
+
 export function HamburgerNav() {
   const [open, setOpen] = useState(false);
+  const [branded, setBranded] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    const onLanded = () => setBranded(true);
+    const onUnlanded = () => setBranded(false);
+    window.addEventListener("haru:logo-landed", onLanded);
+    window.addEventListener("haru:logo-unlanded", onUnlanded);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("haru:logo-landed", onLanded);
+      window.removeEventListener("haru:logo-unlanded", onUnlanded);
+    };
   }, []);
+
+  const symbolColor = branded ? "#2c7afc" : "#ffffff";
 
   return (
     <>
@@ -31,17 +64,12 @@ export function HamburgerNav() {
         aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
         aria-expanded={open}
         className="fixed left-5 top-5 z-[210] grid h-12 w-12 place-items-center"
+        style={{
+          transform: open ? "rotate(90deg)" : "rotate(0deg)",
+          transition: "transform 520ms cubic-bezier(0.2, 1, 0.4, 1)",
+        }}
       >
-        <img
-          src="/cursor-haru.svg"
-          alt=""
-          className="h-9 w-9"
-          style={{
-            transform: open ? "rotate(90deg)" : "rotate(0deg)",
-            transition: "transform 520ms cubic-bezier(0.2, 1, 0.4, 1)",
-            filter: "drop-shadow(0 0 10px rgba(126, 255, 141, 0.55))",
-          }}
-        />
+        <HaruSymbol color={symbolColor} />
       </button>
 
       <div
