@@ -104,9 +104,6 @@ export function ProblemDiscoveryScene() {
                 "opacity 800ms cubic-bezier(0.2, 1, 0.4, 1), transform 800ms cubic-bezier(0.2, 1, 0.4, 1)",
             }}
           >
-            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-white/40">
-              결론
-            </p>
             <p
               className="font-sans font-bold text-[color:var(--color-key)]"
               style={{ fontSize: "clamp(1.4rem, 2.6vw, 2.2rem)" }}

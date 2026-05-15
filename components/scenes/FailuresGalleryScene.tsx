@@ -77,12 +77,9 @@ function FailureCard({ item }: { item: Item }) {
           {CAT_LABEL[item.cat]}
         </span>
       </div>
-      <div className="absolute bottom-3 left-3 right-3 space-y-0.5">
+      <div className="absolute bottom-3 left-3 right-3">
         <p className="font-sans text-sm font-medium leading-tight text-white">
           {item.label}
-        </p>
-        <p className="font-mono text-[11px] tracking-wide text-[color:var(--color-key)]/75">
-          다시.
         </p>
       </div>
     </div>
