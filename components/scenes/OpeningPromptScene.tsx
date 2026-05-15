@@ -19,16 +19,19 @@ UX 리서처이자
 프롬프트 엔지니어야.`;
 
 // 섹션 높이 = 100vh(고정 뷰) + SCROLL_VH(타이핑 구간)
-const SCROLL_VH = 260; // 이만큼 스크롤해야 타이핑 끝
-const TAIL_VH = 60; // 타이핑 끝난 뒤 잠시 머무는 여유
+const SCROLL_VH = 260;
+const TAIL_VH = 60;
+// 스크롤이 아무리 빨라도 한 글자당 최소 이 ms는 걸린다 (≈ 33 cps 캡)
+const MIN_MS_PER_CHAR = 30;
 
 export function OpeningPromptScene() {
   const sectionRef = useRef<HTMLElement>(null);
   const [chars, setChars] = useState(0);
-  const lastCharsRef = useRef(0);
+  const charsRef = useRef(0);
+  const targetRef = useRef(0);
+  const lastTickMsRef = useRef(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const rafRef = useRef<number | null>(null);
-  const pendingRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -41,7 +44,6 @@ export function OpeningPromptScene() {
       return;
     }
 
-    // 새로고침/뒤로가기 시 브라우저가 이전 스크롤 위치를 복원하면 타이핑이 즉시 끝난 것처럼 보임
     let prevRestoration: ScrollRestoration | null = null;
     if ("scrollRestoration" in history) {
       prevRestoration = history.scrollRestoration;
@@ -67,7 +69,8 @@ export function OpeningPromptScene() {
       return audioCtxRef.current;
     };
 
-    const playTick = () => {
+    // 기계식 키 클릭 — noise 트랜션트(클랙) + 짧은 저역 thunk + 살짝의 고역 팝
+    const playKeyClick = () => {
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(2);
@@ -78,55 +81,111 @@ export function OpeningPromptScene() {
       const ctx = ensureAudio();
       if (!ctx || ctx.state === "closed") return;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
       try {
         const now = ctx.currentTime;
+
+        // 1) 클랙(고역 noise 버스트)
+        const burstLen = Math.floor(ctx.sampleRate * 0.045);
+        const noiseBuf = ctx.createBuffer(1, burstLen, ctx.sampleRate);
+        const data = noiseBuf.getChannelData(0);
+        for (let i = 0; i < burstLen; i++) {
+          const decay = Math.pow(1 - i / burstLen, 2.6);
+          data[i] = (Math.random() * 2 - 1) * decay;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = noiseBuf;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 2400 + Math.random() * 600;
+        bp.Q.value = 1.4;
+
+        const nGain = ctx.createGain();
+        nGain.gain.setValueAtTime(0.0001, now);
+        nGain.gain.exponentialRampToValueAtTime(0.085, now + 0.002);
+        nGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+        noise.connect(bp);
+        bp.connect(nGain);
+        nGain.connect(ctx.destination);
+        noise.start(now);
+
+        // 2) thunk(저역 짧은 사인)
         const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "square";
-        osc.frequency.value = 1400 + Math.random() * 300;
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.018, now + 0.002);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(95 + Math.random() * 25, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.05);
+        const oGain = ctx.createGain();
+        oGain.gain.setValueAtTime(0.0001, now);
+        oGain.gain.exponentialRampToValueAtTime(0.055, now + 0.003);
+        oGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+        osc.connect(oGain);
+        oGain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.05);
+        osc.stop(now + 0.08);
+
+        // 3) 살짝의 고역 클릭(세밀한 tick)
+        const tickOsc = ctx.createOscillator();
+        tickOsc.type = "triangle";
+        tickOsc.frequency.value = 3200 + Math.random() * 400;
+        const tGain = ctx.createGain();
+        tGain.gain.setValueAtTime(0.0001, now);
+        tGain.gain.exponentialRampToValueAtTime(0.02, now + 0.001);
+        tGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.018);
+        tickOsc.connect(tGain);
+        tGain.connect(ctx.destination);
+        tickOsc.start(now);
+        tickOsc.stop(now + 0.025);
       } catch {
         /* noop */
       }
     };
 
-    const compute = () => {
-      pendingRef.current = null;
+    const computeTarget = () => {
       const el = sectionRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
-      // 타이핑 구간: 섹션 top이 0(뷰포트 상단)에 도달한 순간부터 SCROLL_VH 만큼 스크롤
       const scrolled = Math.max(0, -rect.top);
       const total = (SCROLL_VH / 100) * vh;
       const progress = Math.max(0, Math.min(1, scrolled / total));
-      const next = Math.round(progress * fullText.length);
-      if (next !== lastCharsRef.current) {
-        if (next > lastCharsRef.current) playTick();
-        lastCharsRef.current = next;
-        setChars(next);
+      targetRef.current = Math.round(progress * fullText.length);
+    };
+
+    const loop = (now: number) => {
+      // 타겟 따라잡기 — 한 글자당 MIN_MS_PER_CHAR 간격 유지, 글자마다 클릭음
+      const tgt = targetRef.current;
+      const cur = charsRef.current;
+      if (cur < tgt) {
+        if (!lastTickMsRef.current) lastTickMsRef.current = now;
+        if (now - lastTickMsRef.current >= MIN_MS_PER_CHAR) {
+          const next = cur + 1;
+          charsRef.current = next;
+          setChars(next);
+          playKeyClick();
+          lastTickMsRef.current = now;
+        }
+      } else if (cur > tgt) {
+        // 스크롤 뒤로가면 즉시 줄임 (사운드 X)
+        charsRef.current = tgt;
+        setChars(tgt);
+        lastTickMsRef.current = 0;
+      } else {
+        // 같음 — 다음 진행 때 즉시 시작 가능하게
+        lastTickMsRef.current = 0;
       }
+      rafRef.current = requestAnimationFrame(loop);
     };
 
-    const onScroll = () => {
-      if (pendingRef.current != null) return;
-      pendingRef.current = requestAnimationFrame(compute);
-    };
-
-    compute();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    computeTarget();
+    rafRef.current = requestAnimationFrame(loop);
+    window.addEventListener("scroll", computeTarget, { passive: true });
+    window.addEventListener("resize", computeTarget);
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (pendingRef.current != null) cancelAnimationFrame(pendingRef.current);
+      window.removeEventListener("scroll", computeTarget);
+      window.removeEventListener("resize", computeTarget);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       if (prevRestoration && "scrollRestoration" in history) {
         history.scrollRestoration = prevRestoration;
