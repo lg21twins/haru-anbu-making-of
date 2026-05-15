@@ -67,35 +67,46 @@ function FinalLogo() {
   );
 }
 
-function ChatBubble({ msg, show }: { msg: Msg; show: boolean }) {
+function BigBubble({ msg, state }: { msg: Msg; state: "prev" | "active" | "next" }) {
   const isMe = msg.role === "me";
+  const isActive = state === "active";
   return (
     <div
-      className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+      className={`absolute inset-0 flex items-center px-6 md:px-12 ${
+        isMe ? "justify-end" : "justify-start"
+      }`}
       style={{
-        maxHeight: show ? "640px" : "0px",
-        opacity: show ? 1 : 0,
-        marginBottom: show ? "1.25rem" : "0px",
-        transform: show ? "translateY(0)" : "translateY(14px)",
-        overflow: "hidden",
+        opacity: isActive ? 1 : 0,
+        transform:
+          state === "active"
+            ? "translateY(0)"
+            : state === "prev"
+            ? "translateY(-30px)"
+            : "translateY(30px)",
         transition:
-          "max-height 560ms cubic-bezier(0.2, 1, 0.4, 1), opacity 420ms cubic-bezier(0.2, 1, 0.4, 1) 60ms, margin-bottom 560ms cubic-bezier(0.2, 1, 0.4, 1), transform 520ms cubic-bezier(0.2, 1, 0.4, 1)",
+          "opacity 540ms cubic-bezier(0.2, 1, 0.4, 1), transform 640ms cubic-bezier(0.2, 1, 0.4, 1)",
+        pointerEvents: "none",
       }}
     >
       <div
-        className={`max-w-[82%] rounded-2xl px-5 py-3 font-sans text-[15px] leading-relaxed md:text-base ${
+        className={`relative w-full max-w-3xl rounded-3xl px-7 py-6 font-sans md:px-10 md:py-8 ${
           isMe
             ? "bg-[color:var(--color-key)] text-black"
-            : "border border-white/10 bg-white/[0.04] text-white/90"
+            : "border border-white/12 bg-white/[0.05] text-white/95 backdrop-blur"
         }`}
       >
-        <p>{msg.text}</p>
+        <p
+          className="leading-snug"
+          style={{ fontSize: "clamp(1.35rem, 2.6vw, 2.1rem)" }}
+        >
+          {msg.text}
+        </p>
         {msg.attempt && (
-          <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-4">
-            <div className="mx-auto aspect-square w-[120px]">
+          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-5 md:p-7">
+            <div className="mx-auto aspect-square w-[44vh] max-w-[420px]">
               <AttemptPreview kind={msg.attempt} />
             </div>
-            <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
+            <p className="mt-3 text-center font-mono text-xs uppercase tracking-[0.28em] text-white/45 md:text-sm">
               attempt 0{msg.attempt}
             </p>
           </div>
@@ -108,12 +119,10 @@ function ChatBubble({ msg, show }: { msg: Msg; show: boolean }) {
 export function LogoEvolutionScene() {
   const ref = useRef<HTMLElement>(null);
   const [p, setP] = useState(0);
-  const [visibleMsgs, setVisibleMsgs] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     let ticking = false;
     const compute = () => {
       const rect = el.getBoundingClientRect();
@@ -121,10 +130,7 @@ export function LogoEvolutionScene() {
       const scrolled = Math.max(0, Math.min(range, -rect.top));
       const progress = range > 0 ? scrolled / range : 0;
       setP(progress);
-      const t = Math.max(0, Math.min(1, (progress - 0.03) / 0.55));
-      setVisibleMsgs(Math.round(t * messages.length));
     };
-
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
@@ -133,7 +139,6 @@ export function LogoEvolutionScene() {
         ticking = false;
       });
     };
-
     compute();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", compute);
@@ -143,7 +148,15 @@ export function LogoEvolutionScene() {
     };
   }, []);
 
-  const chatOpacity = p < 0.6 ? 1 : Math.max(0, 1 - (p - 0.6) / 0.05);
+  // 채팅 구간: p 0~0.6 사이를 messages.length 등분, 각 메시지 한 슬롯씩 표시
+  const chatEnd = 0.6;
+  const t = Math.max(0, Math.min(1, p / chatEnd));
+  const activeIdx = Math.min(
+    messages.length - 1,
+    Math.floor(t * messages.length)
+  );
+
+  const chatOpacity = p < chatEnd - 0.02 ? 1 : Math.max(0, 1 - (p - (chatEnd - 0.02)) / 0.04);
   const igeodaOpacity =
     p < 0.65
       ? 0
@@ -160,23 +173,19 @@ export function LogoEvolutionScene() {
   return (
     <section ref={ref} className="relative w-full" style={{ height: "1100vh" }}>
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-black">
-        {/* 채팅 thread */}
+        {/* 채팅 — 한 번에 한 메시지만 크게 */}
         <div
-          className="absolute inset-0 flex items-end justify-center px-6 pb-[10vh] pt-[10vh] md:px-10"
+          className="absolute inset-0"
           style={{
             opacity: chatOpacity,
             transition: "opacity 400ms ease-out",
-            pointerEvents: chatOpacity < 0.5 ? "none" : "auto",
           }}
         >
-          <div
-            className="flex w-full max-w-2xl flex-col justify-end overflow-hidden"
-            style={{ maxHeight: "80vh" }}
-          >
-            {messages.map((m, i) => (
-              <ChatBubble key={i} msg={m} show={i < visibleMsgs} />
-            ))}
-          </div>
+          {messages.map((m, i) => {
+            const state: "prev" | "active" | "next" =
+              i === activeIdx ? "active" : i < activeIdx ? "prev" : "next";
+            return <BigBubble key={i} msg={m} state={state} />;
+          })}
         </div>
 
         {/* "이거다." */}
