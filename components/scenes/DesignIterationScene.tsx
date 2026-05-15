@@ -123,7 +123,7 @@ export function DesignIterationScene() {
 
   const thatsItOp = fadeBetween(p, M.thatsItIn, M.thatsItHold, M.thatsItOut - 0.04, M.thatsItOut);
   const finalOp = fadeBetween(p, M.finalIn, M.finalHold, 1.5, 2);
-  const finalScale = 1 + Math.max(0, Math.min(0.08, (p - M.finalIn) / 0.2));
+  const finalScale = 1 + Math.max(0, Math.min(0.04, (p - M.finalIn) / 0.4));
 
   // 현재 활성 버전 라벨 — opacity 가장 큰 레이어 기준
   const layers = [
@@ -164,7 +164,7 @@ export function DesignIterationScene() {
           </div>
         </header>
 
-        <div className="relative flex flex-1 items-center justify-center pb-24 pt-28 md:pb-32 md:pt-40">
+        <div className="relative flex flex-1 items-center justify-center pb-16 pt-24 md:pb-20 md:pt-28">
           <div
             className="relative"
             style={{

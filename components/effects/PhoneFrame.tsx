@@ -9,16 +9,23 @@ type Props = {
   style?: React.CSSProperties;
 };
 
+// 높이 기반으로 한 다음 9:19.5 비율로 가로 산출 → 뷰포트 안에 항상 들어옴
 const sizes = {
-  lg: "min(420px, 78vw)",
-  md: "min(330px, 64vw)",
+  lg: {
+    height: "min(72vh, 820px)",
+    width: "min(calc(72vh * 9 / 19.5), calc(820px * 9 / 19.5), 78vw)",
+  },
+  md: {
+    height: "min(60vh, 640px)",
+    width: "min(calc(60vh * 9 / 19.5), calc(640px * 9 / 19.5), 64vw)",
+  },
 };
 
 export function PhoneFrame({ children, size = "lg", className = "", style }: Props) {
   return (
     <div
       className={`relative ${className}`}
-      style={{ width: sizes[size], aspectRatio: "9 / 19.5", ...style }}
+      style={{ width: sizes[size].width, height: sizes[size].height, ...style }}
     >
       <div
         className="absolute inset-0 rounded-[44px] md:rounded-[56px]"
