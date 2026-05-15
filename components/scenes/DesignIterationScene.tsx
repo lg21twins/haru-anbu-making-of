@@ -6,24 +6,26 @@ import { PhoneFrame } from "@/components/effects/PhoneFrame";
 
 const TOTAL_VH = 820;
 
+// 사람 일러스트/캐릭터 아바타 없는 audit-screenshot들로만 구성
 const explicit = [
-  { v: "v1", caption: "초기 손그림", src: "/media/img/stage-v1.png" },
-  { v: "v2", caption: "역할별 분기", src: "/media/img/stage-v2.png" },
-  { v: "v3", caption: "정보 위계 정돈", src: "/media/img/stage-v2.png" },
+  { v: "v01", caption: "초기 시안", src: "/media/img/stages/v01.png" },
+  { v: "v02", caption: "인트로 정리", src: "/media/img/stages/v02.png" },
+  { v: "v03", caption: "타이포 위계", src: "/media/img/stages/v03.png" },
 ];
 
 const cascade = [
-  { v: "v4", src: "/media/img/stage-v4.png" },
-  { v: "v6", src: "/media/img/stage-v7.png" },
-  { v: "v7", src: "/media/img/stage-v7.png" },
-  { v: "v8", src: "/media/img/stage-v8.png" },
-  { v: "v9.5", src: "/media/img/stage-v9-5.png" },
-  { v: "v10", src: "/media/img/stage-v10.png" },
-  { v: "v11", src: "/media/img/stage-v11.png" },
-  { v: "v12", src: "/media/img/stage-v9-5.png" },
+  { v: "v04", src: "/media/img/stages/v04.png" },
+  { v: "v05", src: "/media/img/stages/v05.png" },
+  { v: "v06", src: "/media/img/stages/v06.png" },
+  { v: "v07", src: "/media/img/stages/v07.png" },
+  { v: "v08", src: "/media/img/stages/v08.png" },
+  { v: "v09", src: "/media/img/stages/v09.png" },
+  { v: "v10", src: "/media/img/stages/v10.png" },
+  { v: "v11", src: "/media/img/stages/v11.png" },
+  { v: "v12", src: "/media/img/stages/v12.png" },
 ];
 
-const finalStage = { v: "v13", src: "/media/img/stage-v9.png" };
+const finalStage = { v: "v13", src: "/media/img/stages/v13.png" };
 
 const M = {
   v1In: 0.04,
@@ -123,6 +125,17 @@ export function DesignIterationScene() {
   const finalOp = fadeBetween(p, M.finalIn, M.finalHold, 1.5, 2);
   const finalScale = 1 + Math.max(0, Math.min(0.08, (p - M.finalIn) / 0.2));
 
+  // 현재 활성 버전 라벨 — opacity 가장 큰 레이어 기준
+  const layers = [
+    { v: explicit[0].v, op: v1Op },
+    { v: explicit[1].v, op: v2Op },
+    { v: explicit[2].v, op: v3Op },
+    { v: cascade[cascadeIdx].v, op: cascadeOp },
+    { v: finalStage.v, op: finalOp },
+  ];
+  const top = layers.reduce((a, b) => (b.op > a.op ? b : a), layers[0]);
+  const versionLabel = top.op > 0.1 ? top.v : "";
+
   return (
     <section
       id="s-design"
@@ -131,7 +144,7 @@ export function DesignIterationScene() {
       style={{ height: `${TOTAL_VH}vh` }}
     >
       <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-black">
-        <header className="absolute inset-x-0 top-12 z-20 px-6 md:top-20 md:px-12">
+        <header className="absolute inset-x-0 top-12 z-20 flex items-start justify-between gap-6 px-6 md:top-20 md:px-12">
           <p
             className="font-mono leading-[1.1] text-white"
             style={{ fontSize: "clamp(2rem, 4.6vw, 4rem)" }}
@@ -139,6 +152,16 @@ export function DesignIterationScene() {
             <span className="text-[color:var(--color-key)]">&gt; </span>
             디자인 시작.
           </p>
+          <div
+            className="shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 font-mono uppercase tracking-[0.18em] text-white/85 backdrop-blur md:px-5 md:py-2.5"
+            style={{
+              fontSize: "clamp(0.95rem, 1.4vw, 1.25rem)",
+              opacity: versionLabel ? 1 : 0,
+              transition: "opacity 320ms ease-out",
+            }}
+          >
+            {versionLabel}
+          </div>
         </header>
 
         <div className="relative flex flex-1 items-center justify-center pb-24 pt-28 md:pb-32 md:pt-40">
@@ -230,9 +253,9 @@ function Layer({
 
 function Progress({ p }: { p: number }) {
   const segments = [
-    { label: "v1", end: M.v2In },
-    { label: "v2", end: M.v3In },
-    { label: "v3", end: M.cascadeStart },
+    { label: "v01", end: M.v2In },
+    { label: "v02", end: M.v3In },
+    { label: "v03", end: M.cascadeStart },
     { label: "...", end: M.cascadeEnd },
     { label: "v13", end: 1 },
   ];
