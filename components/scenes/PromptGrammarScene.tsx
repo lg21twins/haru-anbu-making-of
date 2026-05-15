@@ -2,12 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-// 실제 프롬프트 + 프로젝트 용어 + 자연스럽게 만든 명령들 — 모두 unique
-// weight: 1 = 작게, 2 = 보통, 3 = 크게
 type Pill = { text: string; weight: 1 | 2 | 3 };
 
 const pillsData: Pill[] = [
-  // 자주 등장 핵심 동사/명사 — 크게
   { text: "디자인", weight: 3 },
   { text: "스크린샷", weight: 3 },
   { text: "만들어줘", weight: 3 },
@@ -16,7 +13,6 @@ const pillsData: Pill[] = [
   { text: "이거야", weight: 3 },
   { text: "더 단순하게", weight: 3 },
 
-  // 두 번째 그룹 — 보통
   { text: "홈화면", weight: 2 },
   { text: "탭바", weight: 2 },
   { text: "피드백", weight: 2 },
@@ -43,7 +39,6 @@ const pillsData: Pill[] = [
   { text: "프롬프트 다시", weight: 2 },
   { text: "온보딩", weight: 2 },
 
-  // 디테일 — 작게
   { text: "행간 자간", weight: 1 },
   { text: "여백", weight: 1 },
   { text: "글라스", weight: 1 },
@@ -147,41 +142,40 @@ function shuffled<T>(arr: T[]): T[] {
 
 export function PromptGrammarScene() {
   const ref = useRef<HTMLElement>(null);
-  const [shown, setShown] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
   const pills = useMemo(() => {
     const arr = shuffled(pillsData);
     return arr.map((p, i) => ({
       ...p,
       style: palette[(i * 5 + Math.floor(hash(i) * 7)) % palette.length],
-      rot: (hash(i * 11 + 5) - 0.5) * 4, // ±2deg
+      rot: (hash(i * 11 + 5) - 0.5) * 4,
     }));
   }, []);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const compute = () => {
-      const rect = el.getBoundingClientRect();
-      const range = el.offsetHeight - window.innerHeight;
-      const scrolled = Math.max(0, Math.min(range, -rect.top));
-      const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.04) / 0.82));
-      setShown(Math.round(pills.length * t));
-    };
-    compute();
-    window.addEventListener("scroll", compute, { passive: true });
-    window.addEventListener("resize", compute);
-    return () => {
-      window.removeEventListener("scroll", compute);
-      window.removeEventListener("resize", compute);
-    };
-  }, [pills.length]);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setRevealed(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <section ref={ref} className="relative w-full" style={{ height: "720vh" }}>
-      <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-[#0a1024]">
-        <div className="absolute inset-x-0 top-8 z-20 px-6 text-center md:top-12">
+    <section
+      ref={ref}
+      className="relative w-full overflow-hidden bg-[#0a1024]"
+    >
+      <div className="relative flex min-h-screen w-full flex-col py-20 md:py-24">
+        <div className="px-6 text-center">
           <h2
             className="font-sans font-semibold text-white"
             style={{ fontSize: "clamp(1.4rem, 2.6vw, 2.2rem)" }}
@@ -190,22 +184,22 @@ export function PromptGrammarScene() {
           </h2>
         </div>
 
-        <div className="flex h-full w-full items-center justify-center px-3 py-20 md:px-6 md:py-24">
-          <div className="flex w-full max-w-[1400px] flex-wrap items-center justify-center gap-1.5 md:gap-2">
+        <div className="mt-10 flex flex-1 items-center justify-center md:mt-14">
+          <div className="flex w-screen flex-wrap items-center justify-center gap-1.5 px-1 md:gap-2 md:px-2">
             {pills.map((pill, i) => {
               const w = pill.weight;
               const sizeMap = {
                 1: {
-                  font: "clamp(0.78rem, 0.95vw, 1.05rem)",
-                  pad: "0.42em 0.85em",
+                  font: "clamp(0.85rem, 1.2vw, 1.25rem)",
+                  pad: "0.46em 0.95em",
                 },
                 2: {
-                  font: "clamp(0.95rem, 1.5vw, 1.55rem)",
-                  pad: "0.5em 1em",
+                  font: "clamp(1.1rem, 1.95vw, 2rem)",
+                  pad: "0.55em 1.15em",
                 },
                 3: {
-                  font: "clamp(1.2rem, 2.2vw, 2.3rem)",
-                  pad: "0.55em 1.15em",
+                  font: "clamp(1.5rem, 3vw, 3.2rem)",
+                  pad: "0.62em 1.35em",
                 },
               };
               const c = pill.style;
@@ -222,13 +216,13 @@ export function PromptGrammarScene() {
                     fontSize: sizeMap[w].font,
                     padding: sizeMap[w].pad,
                     transform: `rotate(${pill.rot}deg) ${
-                      shown > i ? "scale(1)" : "scale(0.6)"
+                      revealed ? "scale(1)" : "scale(0.7)"
                     }`,
-                    opacity: shown > i ? 1 : 0,
-                    transition: `opacity 360ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                      Math.min(i * 14, 1300)
-                    }ms, transform 440ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                      Math.min(i * 14, 1300)
+                    opacity: revealed ? 1 : 0,
+                    transition: `opacity 420ms cubic-bezier(0.2, 1, 0.4, 1) ${
+                      Math.min(i * 12, 1100)
+                    }ms, transform 520ms cubic-bezier(0.2, 1, 0.4, 1) ${
+                      Math.min(i * 12, 1100)
                     }ms`,
                   }}
                 >
@@ -240,10 +234,10 @@ export function PromptGrammarScene() {
         </div>
 
         <p
-          className="absolute inset-x-0 bottom-6 z-20 px-6 text-center font-sans text-sm text-white/55 md:bottom-8"
+          className="mt-10 px-6 text-center font-sans text-sm text-white/55 md:mt-12"
           style={{
-            opacity: shown >= pills.length ? 1 : 0,
-            transition: "opacity 700ms ease-out",
+            opacity: revealed ? 1 : 0,
+            transition: "opacity 800ms ease-out 1400ms",
           }}
         >
           51개 대화에서 가장 자주 보낸 말들 — 총 {pills.length}개.
