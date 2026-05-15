@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Word = { text: string; count: number };
 
 // 06_로그/대화기록_작업로그.md 프롬프트 74개에서 실측한 빈도
-const words: Word[] = [
+const baseWords: Word[] = [
   { text: "디자인", count: 9 },
   { text: "스크린샷", count: 8 },
   { text: "만들어줘", count: 6 },
@@ -32,30 +32,49 @@ const words: Word[] = [
   { text: "우리", count: 3 },
 ];
 
-// pill 컬러 팔레트 — 글자/배경/테두리 묶음
 type PillStyle = { bg: string; fg: string; border?: string };
 const palette: PillStyle[] = [
-  { bg: "#ffffff", fg: "#0a0a0a" }, // 화이트
-  { bg: "#2c7afc", fg: "#ffffff" }, // 브랜드 블루
-  { bg: "#0a1a3a", fg: "#74a8ff", border: "rgba(116,168,255,0.3)" }, // 다크 네이비
-  { bg: "#7eff8d", fg: "#0a0a0a" }, // 키 그린
-  { bg: "#7c4dff", fg: "#ffffff" }, // 퍼플
-  { bg: "#10b9c4", fg: "#0a0a0a" }, // 시안
-  { bg: "#d946ef", fg: "#ffffff" }, // 마젠타
-  { bg: "transparent", fg: "#ffffff", border: "rgba(255,255,255,0.3)" }, // 아웃라인
+  { bg: "#ffffff", fg: "#0a0a0a" },
+  { bg: "#2c7afc", fg: "#ffffff" },
+  { bg: "#0f1b3a", fg: "#74a8ff", border: "rgba(116,168,255,0.35)" },
+  { bg: "#7eff8d", fg: "#0a0a0a" },
+  { bg: "#7c4dff", fg: "#ffffff" },
+  { bg: "#10b9c4", fg: "#0a0a0a" },
+  { bg: "#d946ef", fg: "#ffffff" },
+  { bg: "transparent", fg: "#ffffff", border: "rgba(255,255,255,0.3)" },
+  { bg: "#1a2447", fg: "#ffffff" },
+  { bg: "#ff6b9d", fg: "#0a0a0a" },
 ];
 
-// 시드 기반 결정론적 셔플 — 단어별 컬러 고정
-function pickColor(seed: number): PillStyle {
-  return palette[seed % palette.length];
+// 결정론적 의사난수
+function hash(n: number): number {
+  let x = (n * 9301 + 49297) % 233280;
+  return x / 233280;
 }
 
-const MAX = 9;
-const MIN = 3;
+// 빈도만큼 단어를 반복해서 펼친 뒤 셔플
+function buildPills(): { text: string; size: number; style: PillStyle; rot: number }[] {
+  const flat: { text: string; size: number }[] = [];
+  baseWords.forEach((w) => {
+    for (let i = 0; i < w.count; i++) {
+      flat.push({ text: w.text, size: w.count });
+    }
+  });
+  // 셔플 (시드 기반 — SSR/CSR 일관)
+  const arr = flat.map((p, i) => ({ p, k: hash(i * 17 + 3) }));
+  arr.sort((a, b) => a.k - b.k);
+  return arr.map(({ p }, idx) => ({
+    text: p.text,
+    size: p.size,
+    style: palette[idx % palette.length],
+    rot: (hash(idx * 7 + 1) - 0.5) * 5, // -2.5deg ~ +2.5deg 살짝
+  }));
+}
 
 export function PromptGrammarScene() {
   const ref = useRef<HTMLElement>(null);
   const [shown, setShown] = useState(0);
+  const pills = useMemo(buildPills, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -65,8 +84,8 @@ export function PromptGrammarScene() {
       const range = el.offsetHeight - window.innerHeight;
       const scrolled = Math.max(0, Math.min(range, -rect.top));
       const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.08) / 0.78));
-      setShown(Math.round(words.length * t));
+      const t = Math.max(0, Math.min(1, (p - 0.04) / 0.82));
+      setShown(Math.round(pills.length * t));
     };
     compute();
     window.addEventListener("scroll", compute, { passive: true });
@@ -75,64 +94,70 @@ export function PromptGrammarScene() {
       window.removeEventListener("scroll", compute);
       window.removeEventListener("resize", compute);
     };
-  }, []);
+  }, [pills.length]);
+
+  const MAX = 9;
+  const MIN = 3;
 
   return (
-    <section ref={ref} className="relative w-full" style={{ height: "640vh" }}>
-      <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0a1024]">
-        <div className="mb-8 px-6 text-center md:mb-10">
+    <section ref={ref} className="relative w-full" style={{ height: "720vh" }}>
+      <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-[#0a1024]">
+        <div className="absolute inset-x-0 top-8 z-20 px-6 text-center md:top-12">
           <h2
             className="font-sans font-semibold text-white"
-            style={{ fontSize: "clamp(1.6rem, 3vw, 2.6rem)" }}
+            style={{ fontSize: "clamp(1.4rem, 2.6vw, 2.2rem)" }}
           >
             우리가 가장 많이 쓴 말들.
           </h2>
         </div>
 
-        <div className="flex w-full max-w-[1280px] flex-wrap items-center justify-center gap-2 px-4 md:gap-3 md:px-8">
-          {words.map((w, i) => {
-            const t = (w.count - MIN) / (MAX - MIN);
-            // 폰트 크기 (rem)
-            const fontSize = `clamp(${0.95 + t * 0.5}rem, ${
-              1.4 + t * 2.6
-            }vw, ${1.8 + t * 2.4}rem)`;
-            const pad = `${0.4 + t * 0.5}em ${0.8 + t * 0.6}em`;
-            const c = pickColor(i * 3 + w.count);
-            return (
-              <span
-                key={w.text}
-                className="inline-flex items-center rounded-full font-sans font-semibold leading-none tracking-tight"
-                style={{
-                  background: c.bg,
-                  color: c.fg,
-                  border: c.border
-                    ? `1.5px solid ${c.border}`
-                    : "1.5px solid transparent",
-                  fontSize,
-                  padding: pad,
-                  opacity: shown > i ? 1 : 0,
-                  transform: shown > i ? "translateY(0) scale(1)" : "translateY(18px) scale(0.92)",
-                  transition: `opacity 520ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                    i * 35
-                  }ms, transform 560ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                    i * 35
-                  }ms`,
-                }}
-              >
-                {w.text}
-              </span>
-            );
-          })}
+        <div className="flex h-full w-full items-center justify-center px-3 py-20 md:px-6 md:py-24">
+          <div className="flex w-full max-w-[1400px] flex-wrap items-center justify-center gap-1.5 md:gap-2">
+            {pills.map((pill, i) => {
+              const t = (pill.size - MIN) / (MAX - MIN);
+              const fontSize = `clamp(${0.8 + t * 0.35}rem, ${
+                1.05 + t * 1.4
+              }vw, ${1.3 + t * 1.6}rem)`;
+              const pad = `${0.32 + t * 0.3}em ${0.7 + t * 0.4}em`;
+              const c = pill.style;
+              return (
+                <span
+                  key={i}
+                  className="inline-flex items-center whitespace-nowrap rounded-full font-sans font-semibold leading-none tracking-tight"
+                  style={{
+                    background: c.bg,
+                    color: c.fg,
+                    border: c.border
+                      ? `1.5px solid ${c.border}`
+                      : "1.5px solid transparent",
+                    fontSize,
+                    padding: pad,
+                    transform: `rotate(${pill.rot}deg) ${
+                      shown > i ? "scale(1)" : "scale(0.6)"
+                    }`,
+                    opacity: shown > i ? 1 : 0,
+                    transition: `opacity 380ms cubic-bezier(0.2, 1, 0.4, 1) ${
+                      Math.min(i * 18, 1400)
+                    }ms, transform 460ms cubic-bezier(0.2, 1, 0.4, 1) ${
+                      Math.min(i * 18, 1400)
+                    }ms`,
+                  }}
+                >
+                  {pill.text}
+                </span>
+              );
+            })}
+          </div>
         </div>
 
         <p
-          className="mt-10 px-6 text-center font-sans text-sm text-white/55 md:mt-12"
+          className="absolute inset-x-0 bottom-6 z-20 px-6 text-center font-sans text-sm text-white/55 md:bottom-8"
           style={{
-            opacity: shown >= words.length ? 1 : 0,
+            opacity: shown >= pills.length ? 1 : 0,
             transition: "opacity 700ms ease-out",
           }}
         >
-          프롬프트 74개에서 실제로 가장 많이 등장한 말들.
+          프롬프트 74개에서 등장한 횟수만큼 — 총 {pills.length}개.
         </p>
       </div>
     </section>
