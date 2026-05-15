@@ -182,13 +182,13 @@ export function DesignIterationScene() {
 
             {showRetry > 0 && (
               <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible"
                 style={{ opacity: showRetry }}
               >
                 <p
-                  className="font-sans font-bold text-white"
+                  className="whitespace-nowrap font-sans font-bold text-white"
                   style={{
-                    fontSize: "clamp(4.5rem, 13vw, 12rem)",
+                    fontSize: "clamp(3.5rem, 11vw, 10rem)",
                     textShadow:
                       "0 0 40px rgba(0,0,0,0.95), 0 0 90px rgba(0,0,0,0.8)",
                   }}
@@ -200,13 +200,13 @@ export function DesignIterationScene() {
 
             {thatsItOp > 0 && (
               <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible"
                 style={{ opacity: thatsItOp }}
               >
                 <p
-                  className="font-sans font-bold text-[color:var(--color-key)]"
+                  className="whitespace-nowrap font-sans font-bold text-[color:var(--color-key)]"
                   style={{
-                    fontSize: "clamp(4.5rem, 13vw, 13rem)",
+                    fontSize: "clamp(3.5rem, 11vw, 11rem)",
                     filter: "drop-shadow(0 0 40px rgba(126,255,141,0.55))",
                   }}
                 >
