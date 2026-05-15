@@ -2,122 +2,76 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Item = {
-  src: string;
-  label: string;
-  caption: string;
-  span?: "wide" | "tall";
-};
-
-const items: Item[] = [
-  {
-    src: "/media/logo/final.svg",
-    label: "BRAND",
-    caption: "하루안부 심볼",
-    span: "wide",
-  },
-  {
-    src: "/media/img/stage-v11.png",
-    label: "GUARDIAN",
-    caption: "보호자앱",
-  },
-  {
-    src: "/media/img/patient-final.png",
-    label: "PATIENT",
-    caption: "환자앱",
-  },
-  {
-    src: "/media/img/nurse-final.png",
-    label: "MEDICAL",
-    caption: "의료진웹",
-  },
-  {
-    src: "/media/poster/iter4.jpg",
-    label: "FILM",
-    caption: "Higgsfield 4차",
-    span: "wide",
-  },
-];
-
 export function CompletedDesignsScene() {
   const ref = useRef<HTMLElement>(null);
-  const [shown, setShown] = useState(0);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const compute = () => {
-      const rect = el.getBoundingClientRect();
-      const range = el.offsetHeight - window.innerHeight;
-      const scrolled = Math.max(0, Math.min(range, -rect.top));
-      const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.05) / 0.8));
-      setShown(Math.round(t * items.length));
-    };
-    compute();
-    window.addEventListener("scroll", compute, { passive: true });
-    window.addEventListener("resize", compute);
-    return () => {
-      window.removeEventListener("scroll", compute);
-      window.removeEventListener("resize", compute);
-    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setShow(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   return (
-    <section ref={ref} className="relative w-full" style={{ height: "640vh" }}>
-      <div className="sticky top-0 flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black">
-        <div className="mb-10 px-6 text-center">
+    <section ref={ref} className="relative w-full bg-black py-24 md:py-32">
+      <div className="mx-auto w-full max-w-6xl px-6 md:px-12">
+        <div className="mb-10 text-center md:mb-12">
           <h2
             className="font-sans font-semibold text-white"
             style={{ fontSize: "clamp(1.6rem, 3vw, 2.6rem)" }}
           >
-            <span className="text-[color:var(--color-key)]">이게</span> 우리가 원한 것.
+            <span className="text-[color:var(--color-key)]">이게</span> 우리가
+            원한 것.
           </h2>
         </div>
 
-        <div className="grid w-full max-w-6xl grid-cols-2 gap-4 px-6 md:grid-cols-6 md:gap-5">
-          {items.map((it, i) => {
-            const show = i < shown;
-            const span = it.span === "wide" ? "md:col-span-3" : "md:col-span-2";
-            const isVideo = it.label === "FILM";
-            const isLogo = it.label === "BRAND";
-            return (
-              <article
-                key={`${it.src}-${i}`}
-                className={`relative overflow-hidden rounded-xl border border-white/10 bg-[#0a0d12] ${span}`}
-                style={{
-                  aspectRatio: it.span === "wide" ? "16/10" : "9/16",
-                  opacity: show ? 1 : 0,
-                  transform: show ? "translateY(0) scale(1)" : "translateY(48px) scale(0.96)",
-                  transition: `opacity 720ms cubic-bezier(0.2,1,0.4,1) ${
-                    i * 70
-                  }ms, transform 760ms cubic-bezier(0.2,1,0.4,1) ${i * 70}ms`,
-                }}
+        <div
+          className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]"
+          style={{
+            aspectRatio: "16 / 9",
+            opacity: show ? 1 : 0,
+            transform: show ? "translateY(0)" : "translateY(40px)",
+            transition:
+              "opacity 820ms cubic-bezier(0.2,1,0.4,1), transform 820ms cubic-bezier(0.2,1,0.4,1)",
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(135deg, #fff 0 1px, transparent 1px 14px)",
+            }}
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+            <div className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/15 bg-white/[0.04] md:h-20 md:w-20">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-7 w-7 text-white/65 md:h-9 md:w-9"
               >
-                <img
-                  src={it.src}
-                  alt={it.caption}
-                  className={`absolute inset-0 h-full w-full ${
-                    isLogo ? "object-contain p-10" : "object-cover"
-                  }`}
-                  draggable={false}
+                <path
+                  d="M8 5v14l11-7-11-7z"
+                  fill="currentColor"
                 />
-                {isVideo && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                )}
-                <div className="absolute left-3 top-3">
-                  <span className="rounded-sm border border-[color:var(--color-key)]/40 bg-black/60 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[color:var(--color-key)]">
-                    {it.label}
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <p className="font-sans text-sm font-semibold text-white">
-                    {it.caption}
-                  </p>
-                </div>
-              </article>
-            );
-          })}
+              </svg>
+            </div>
+            <p
+              className="font-sans font-semibold text-white"
+              style={{ fontSize: "clamp(1.2rem, 2.2vw, 1.8rem)" }}
+            >
+              제작한 영상이 들어갈 부분
+            </p>
+          </div>
         </div>
       </div>
     </section>

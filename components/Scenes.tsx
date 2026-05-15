@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { OpeningPromptScene } from "@/components/scenes/OpeningPromptScene";
 import { CommandScene } from "@/components/scenes/CommandScene";
 import { LineScene } from "@/components/scenes/LineScene";
-import { CountUpScene } from "@/components/scenes/CountUpScene";
+import { AutoStatsScene } from "@/components/scenes/AutoStatsScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
 
@@ -175,32 +175,7 @@ export function Scenes() {
 
         {/* === 결산 === */}
         <div id="nav-numbers" className="block" />
-        <CountUpScene
-          id="s-count-lines"
-          to={12236}
-          suffix="줄의 대화."
-          format={(n) => n.toLocaleString()}
-          duration={2.6}
-        />
-        <CountUpScene
-          id="s-count-revisions"
-          to={612}
-          suffix="줄의 디자인 수정 명령."
-          format={(n) => n.toLocaleString()}
-          duration={1.8}
-        />
-        <CountUpScene
-          id="s-count-prompts"
-          to={228}
-          suffix="번의 재제작 요청."
-          duration={1.6}
-        />
-        <CountUpScene
-          id="s-count-days"
-          to={106}
-          suffix="일간의 대장정."
-          duration={1.4}
-        />
+        <AutoStatsScene />
 
         {/* 전환 → 완성된 디자인들 */}
         <LineScene
