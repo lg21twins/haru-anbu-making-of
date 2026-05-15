@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Msg = {
   role: "me" | "ai";
@@ -107,8 +107,11 @@ function ChatBubble({ msg, show }: { msg: Msg; show: boolean }) {
 
 export function LogoEvolutionScene() {
   const ref = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
   const [p, setP] = useState(0);
   const [visibleMsgs, setVisibleMsgs] = useState(0);
+  const [yOffset, setYOffset] = useState(0);
   const landedRef = useRef(false);
 
   useEffect(() => {
@@ -126,7 +129,7 @@ export function LogoEvolutionScene() {
       setVisibleMsgs(Math.round(t * messages.length));
 
       // 좌상단으로 날아간 뒤 색이 채워졌다고 알림
-      const shouldLand = progress >= 0.94;
+      const shouldLand = progress >= 0.96;
       if (shouldLand && !landedRef.current) {
         landedRef.current = true;
         window.dispatchEvent(new CustomEvent("haru:logo-landed"));
@@ -157,31 +160,46 @@ export function LogoEvolutionScene() {
     };
   }, []);
 
+  // 새 메시지가 추가될 때마다 스택 높이를 측정해서 뷰포트보다 크면 위로 밀어준다
+  useLayoutEffect(() => {
+    const stack = stackRef.current;
+    const view = viewportRef.current;
+    if (!stack || !view) return;
+    const overflow = stack.scrollHeight - view.clientHeight;
+    setYOffset(Math.max(0, overflow));
+  }, [visibleMsgs]);
+
   const chatOpacity = p < 0.6 ? 1 : Math.max(0, 1 - (p - 0.6) / 0.05);
   const igeodaOpacity =
     p < 0.65
       ? 0
       : p < 0.72
       ? (p - 0.65) / 0.07
-      : p < 0.8
+      : p < 0.78
       ? 1
-      : Math.max(0, 1 - (p - 0.8) / 0.04);
-  const logoOpacity = p < 0.8 ? 0 : 1;
+      : Math.max(0, 1 - (p - 0.78) / 0.04);
+  const logoFadeIn = p < 0.78 ? 0 : Math.min(1, (p - 0.78) / 0.04);
 
-  // 날아가기 — 0.85부터 시작해 0.96에 좌상단 도착
-  const flyP = Math.max(0, Math.min(1, (p - 0.85) / 0.11));
-  // ease-out cubic
-  const fly = 1 - Math.pow(1 - flyP, 3);
-  const rotateDeg = fly * 540;
+  // 날아가기 — 0.82부터 시작해 0.97에 좌상단 도착 (15% 구간으로 천천히)
+  const flyP = Math.max(0, Math.min(1, (p - 0.82) / 0.15));
+  // ease-in-out cubic — 더 부드럽게
+  const fly =
+    flyP < 0.5
+      ? 4 * flyP * flyP * flyP
+      : 1 - Math.pow(-2 * flyP + 2, 3) / 2;
+  const rotateDeg = fly * 360; // 한 바퀴만, 천천히
   const flyScale = 1 - fly * 0.92; // 1 → 0.08
-  // 좌상단 햄버거 중심 위치: left-5 top-5 + 12×12 박스 안 9×9 svg의 중심 ≈ 44px,44px
+  // 좌상단 햄버거 중심 위치 ≈ 44px, 44px
   const tx = `calc((44px - 50vw) * ${fly})`;
   const ty = `calc((44px - 50vh) * ${fly})`;
+  // 도착 후엔 햄버거가 컬러로 채워지니까 비행 로고는 페이드아웃 (겹침 방지)
+  const arrivedFade = flyP < 0.92 ? 1 : Math.max(0, 1 - (flyP - 0.92) / 0.08);
+  const logoOpacity = logoFadeIn * arrivedFade;
 
   return (
     <section ref={ref} className="relative w-full" style={{ height: "1100vh" }}>
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-black">
-        {/* 채팅 thread — 위쪽 fade mask로 잘림 대신 자연스럽게 사라짐 */}
+        {/* 채팅 thread — 누적되면 안쪽을 위로 밀어서 최신 버블이 항상 보임 */}
         <div
           className="absolute inset-0 flex items-end justify-center px-6 pb-[10vh] pt-[10vh] md:px-10"
           style={{
@@ -191,19 +209,22 @@ export function LogoEvolutionScene() {
           }}
         >
           <div
-            className="relative w-full max-w-2xl"
-            style={{ maxHeight: "80vh" }}
+            ref={viewportRef}
+            className="relative w-full max-w-2xl overflow-hidden"
+            style={{
+              maxHeight: "80vh",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 6%, #000 14%, #000 100%)",
+              maskImage:
+                "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 6%, #000 14%, #000 100%)",
+            }}
           >
             <div
-              className="flex w-full flex-col justify-end"
+              ref={stackRef}
+              className="flex w-full flex-col"
               style={{
-                maxHeight: "80vh",
-                overflow: "hidden",
-                // 위쪽 16% 영역을 마스크로 페이드아웃 — 잘리는 느낌 없이 사라짐
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 8%, #000 18%, #000 100%)",
-                maskImage:
-                  "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 8%, #000 18%, #000 100%)",
+                transform: `translateY(-${yOffset}px)`,
+                transition: "transform 560ms cubic-bezier(0.2, 1, 0.4, 1)",
               }}
             >
               {messages.map((m, i) => (
@@ -229,7 +250,7 @@ export function LogoEvolutionScene() {
           </p>
         </div>
 
-        {/* 센터 로고 → 좌상단으로 회전하며 날아감 */}
+        {/* 센터 로고 → 좌상단으로 천천히 회전하며 날아감 */}
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: logoOpacity, pointerEvents: "none" }}
@@ -242,8 +263,8 @@ export function LogoEvolutionScene() {
               transform: `translate(${tx}, ${ty}) rotate(${rotateDeg}deg) scale(${flyScale})`,
               transformOrigin: "center center",
               filter: `drop-shadow(0 0 ${
-                12 + (1 - fly) * 24
-              }px rgba(44, 122, 252, ${0.35 + (1 - fly) * 0.25}))`,
+                10 + (1 - fly) * 28
+              }px rgba(44, 122, 252, ${0.3 + (1 - fly) * 0.3}))`,
               transition: "filter 80ms linear",
             }}
           >
