@@ -2,65 +2,34 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Row = {
-  id: string;
-  prompt: string;
-  cat: "리서치" | "기획" | "디자인" | "구현" | "디버깅";
-};
+type Word = { text: string; count: number };
 
-// 06_로그/대화기록_작업로그.md 에서 발췌한 실제 프롬프트
-const rows: Row[] = [
-  {
-    id: "#01",
-    prompt:
-      "안에 있는 파일 분석해서 우리가 이 프로젝트를 만들기 전에 경쟁사 및 시장 조사를 할꺼야",
-    cat: "리서치",
-  },
-  {
-    id: "#10",
-    prompt: "간호사한테 인터뷰할 질문 → 의료인으로 단어 대체해서 다시 만들어줘",
-    cat: "리서치",
-  },
-  {
-    id: "#14",
-    prompt:
-      "컬러 팔레트 추천해줘, 사용자별 컬러를 다르게 하자는 얘기도 나왔는데",
-    cat: "디자인",
-  },
-  {
-    id: "#19",
-    prompt: "순차적으로 다 만들어",
-    cat: "디자인",
-  },
-  {
-    id: "#29",
-    prompt: "v7 홈화면, Apple Liquid Glass 느낌으로 리디자인 해봐",
-    cat: "디자인",
-  },
-  {
-    id: "#38",
-    prompt: "케어 대시보드를 벤토 그리드 + SVG 차트로 다시 짜봐",
-    cat: "구현",
-  },
-  {
-    id: "#47",
-    prompt: "글래스 요소들이 뷰포트 상관없이 잘 보이는 방법 없어?",
-    cat: "디버깅",
-  },
-  {
-    id: "#48",
-    prompt: "홈화면 네비바로 다른 페이지도 동일하게 통일해",
-    cat: "구현",
-  },
+// 06_로그/대화기록_작업로그.md 프롬프트 74개에서 실제로 카운트한 빈도
+const words: Word[] = [
+  { text: "디자인", count: 9 },
+  { text: "스크린샷", count: 8 },
+  { text: "만들어줘", count: 6 },
+  { text: "레퍼런스", count: 6 },
+  { text: "스킬", count: 6 },
+  { text: "홈화면", count: 5 },
+  { text: "파일", count: 5 },
+  { text: "피드백", count: 5 },
+  { text: "탭바", count: 5 },
+  { text: "반영", count: 5 },
+  { text: "추가", count: 5 },
+  { text: "정리", count: 4 },
+  { text: "문서", count: 4 },
+  { text: "채팅", count: 4 },
+  { text: "다시", count: 4 },
+  { text: "업데이트", count: 4 },
+  { text: "다른", count: 4 },
+  { text: "컬러", count: 3 },
+  { text: "통일감", count: 3 },
+  { text: "간호사", count: 3 },
 ];
 
-const CAT_COLOR: Record<Row["cat"], string> = {
-  리서치: "#74a8ff",
-  기획: "#7c4dff",
-  디자인: "#7eff8d",
-  구현: "#00d4ff",
-  디버깅: "#ffb86b",
-};
+const MAX = 9;
+const MIN = 3;
 
 export function PromptGrammarScene() {
   const ref = useRef<HTMLElement>(null);
@@ -74,8 +43,8 @@ export function PromptGrammarScene() {
       const range = el.offsetHeight - window.innerHeight;
       const scrolled = Math.max(0, Math.min(range, -rect.top));
       const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.08) / 0.8));
-      setShown(Math.round(rows.length * t));
+      const t = Math.max(0, Math.min(1, (p - 0.08) / 0.78));
+      setShown(Math.round(words.length * t));
     };
     compute();
     window.addEventListener("scroll", compute, { passive: true });
@@ -94,65 +63,60 @@ export function PromptGrammarScene() {
             className="font-sans font-semibold text-white"
             style={{ fontSize: "clamp(1.6rem, 3vw, 2.6rem)" }}
           >
-            우리가 실제로 보낸 프롬프트.
+            우리가 가장 많이 쓴 말들.
           </h2>
         </div>
 
-        <div className="w-full max-w-5xl px-6">
-          {/* 표 헤더 */}
-          <div className="mb-3 hidden grid-cols-[80px_1fr_120px] gap-6 border-b border-white/15 pb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-white/40 md:grid">
-            <span>id</span>
-            <span>prompt</span>
-            <span className="text-right">category</span>
-          </div>
-
-          <ul>
-            {rows.map((r, i) => (
-              <li
-                key={r.id}
-                className="grid grid-cols-[60px_1fr_84px] items-center gap-3 border-b border-white/8 py-4 md:grid-cols-[80px_1fr_120px] md:gap-6 md:py-5"
+        <div className="flex w-full max-w-6xl flex-wrap items-baseline justify-center gap-x-6 gap-y-4 px-6 md:gap-x-10 md:gap-y-6">
+          {words.map((w, i) => {
+            // 빈도 → 크기 (MIN..MAX → 1.2rem..6rem 식으로)
+            const t = (w.count - MIN) / (MAX - MIN);
+            const remMin = 1.4;
+            const remMax = 5.5;
+            const fontRem = remMin + t * (remMax - remMin);
+            // 상위 5개는 키컬러, 나머지는 흰색
+            const isTop = w.count >= 6;
+            return (
+              <span
+                key={w.text}
+                className="relative inline-flex items-baseline font-sans font-semibold leading-none tracking-tight"
                 style={{
+                  fontSize: `clamp(${remMin * 0.7}rem, ${
+                    fontRem * 0.9
+                  }vw + 0.6rem, ${remMax}rem)`,
+                  color: isTop ? "var(--color-key)" : "#ffffff",
                   opacity: shown > i ? 1 : 0,
-                  transform: shown > i ? "translateX(0)" : "translateX(-36px)",
+                  transform: shown > i ? "translateY(0)" : "translateY(20px)",
                   transition: `opacity 540ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                    i * 40
+                    i * 50
                   }ms, transform 540ms cubic-bezier(0.2, 1, 0.4, 1) ${
-                    i * 40
+                    i * 50
                   }ms`,
+                  textShadow: isTop
+                    ? "0 0 24px rgba(126, 255, 141, 0.35)"
+                    : "none",
                 }}
               >
-                <span className="font-mono text-[13px] text-white/45 md:text-sm">
-                  {r.id}
-                </span>
-                <p
-                  className="font-sans font-medium leading-snug text-white"
-                  style={{ fontSize: "clamp(0.95rem, 1.5vw, 1.2rem)" }}
+                {w.text}
+                <sup
+                  className="ml-1 font-mono font-medium text-white/45"
+                  style={{ fontSize: "0.28em" }}
                 >
-                  "{r.prompt}"
-                </p>
-                <span
-                  className="justify-self-end rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] md:px-3 md:text-[11px]"
-                  style={{
-                    color: CAT_COLOR[r.cat],
-                    borderColor: `${CAT_COLOR[r.cat]}55`,
-                    background: `${CAT_COLOR[r.cat]}10`,
-                  }}
-                >
-                  {r.cat}
-                </span>
-              </li>
-            ))}
-          </ul>
+                  {w.count}
+                </sup>
+              </span>
+            );
+          })}
         </div>
 
         <p
-          className="mt-10 px-6 text-center font-sans text-sm text-white/45"
+          className="mt-12 px-6 text-center font-sans text-sm text-white/45 md:mt-14"
           style={{
-            opacity: shown >= rows.length ? 1 : 0,
+            opacity: shown >= words.length ? 1 : 0,
             transition: "opacity 700ms ease-out",
           }}
         >
-          총 51개 엔트리 중 8개 발췌.
+          프롬프트 74개에서 실제로 센 빈도.
         </p>
       </div>
     </section>
