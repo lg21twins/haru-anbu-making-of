@@ -172,13 +172,15 @@ export function DesignIterationScene() {
               transition: "transform 200ms linear",
             }}
           >
-            {/* '이거야!' / 최종 단계부터 폰 프레임 사라짐 — 카피/이미지만 노출 */}
+            {/* '이거야!' 시점 이후 폰 프레임 영구 사라짐 — 다시 나타나지 않음 */}
             <div
               style={{
-                opacity: Math.max(0, 1 - Math.max(thatsItOp, finalOp)),
+                opacity:
+                  p < M.thatsItIn - 0.02
+                    ? 1
+                    : Math.max(0, 1 - (p - (M.thatsItIn - 0.02)) / 0.03),
                 transition: "opacity 280ms ease-out",
-                pointerEvents:
-                  Math.max(thatsItOp, finalOp) > 0.5 ? "none" : "auto",
+                pointerEvents: p >= M.thatsItIn ? "none" : "auto",
               }}
             >
               <PhoneFrame size="lg">
