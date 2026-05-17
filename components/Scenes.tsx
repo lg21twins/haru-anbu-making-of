@@ -166,13 +166,6 @@ export function Scenes() {
         {/* === 결산 === */}
         <div id="nav-numbers" className="block" />
         <AutoStatsScene />
-
-        {/* 전환 → 완성된 디자인들 */}
-        <LineScene
-          id="s-team-line"
-          text="저희 팀은 우리가 원하는 디자인을 구현하였습니다."
-          size="large"
-        />
         <CompletedDesignsScene />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
