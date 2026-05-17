@@ -125,6 +125,14 @@ export function DesignIterationScene() {
   const finalOp = fadeBetween(p, M.finalIn, M.finalHold, 1.5, 2);
   const finalScale = 1 + Math.max(0, Math.min(0.04, (p - M.finalIn) / 0.4));
 
+  // 좌상단 하루안부 로고(HamburgerNav)는 별도 컴포넌트로 유지되므로,
+  // 씬 내부의 모든 UI(헤더 텍스트, 버전 라벨, Progress, PhoneFrame)를
+  // "이거야!" 페이드아웃과 동시에 사라뜨려 검은 배경만 남도록 한다.
+  const sceneFadeOutOp =
+    p < M.thatsItOut - 0.04
+      ? 1
+      : Math.max(0, 1 - (p - (M.thatsItOut - 0.04)) / 0.04);
+
   // 현재 활성 버전 라벨 — opacity 가장 큰 레이어 기준
   const layers = [
     { v: explicit[0].v, op: v1Op },
@@ -144,7 +152,13 @@ export function DesignIterationScene() {
       style={{ height: `${TOTAL_VH}vh` }}
     >
       <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-black">
-        <header className="absolute inset-x-0 top-12 z-20 flex items-start justify-between gap-6 px-6 md:top-20 md:px-12">
+        <header
+          className="absolute inset-x-0 top-12 z-20 flex items-start justify-between gap-6 px-6 md:top-20 md:px-12"
+          style={{
+            opacity: sceneFadeOutOp,
+            transition: "opacity 280ms ease-out",
+          }}
+        >
           <p
             className="font-mono leading-[1.1] text-white"
             style={{ fontSize: "clamp(2rem, 4.6vw, 4rem)" }}
@@ -228,7 +242,13 @@ export function DesignIterationScene() {
           </div>
         </div>
 
-        <footer className="absolute inset-x-0 bottom-10 z-20 flex items-center justify-end px-6 md:bottom-14 md:px-12">
+        <footer
+          className="absolute inset-x-0 bottom-10 z-20 flex items-center justify-end px-6 md:bottom-14 md:px-12"
+          style={{
+            opacity: sceneFadeOutOp,
+            transition: "opacity 280ms ease-out",
+          }}
+        >
           <Progress p={p} />
         </footer>
       </div>

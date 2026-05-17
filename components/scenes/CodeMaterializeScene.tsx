@@ -422,16 +422,6 @@ export function CodeMaterializeScene() {
           </div>
         </div>
 
-        {/* 타이틀 — 상단 (mix-blend-difference로 흰/검 자동 대응) */}
-        <div className="absolute inset-x-0 top-6 z-30 px-6 text-center md:top-10">
-          <h2
-            className="font-sans font-semibold text-white mix-blend-difference"
-            style={{ fontSize: "clamp(1.2rem, 2.2vw, 1.9rem)" }}
-          >
-            "이 화면 그대로 코드로 짜줘."
-          </h2>
-        </div>
-
         {/* 코드 패널 — 좌측 하단 플로팅 */}
         <div className="pointer-events-none absolute bottom-6 left-4 z-20 md:bottom-10 md:left-8">
           <div className="w-[min(40vw,460px)] overflow-hidden rounded-2xl border border-white/15 bg-[#0d1117]/95 font-mono shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur">
