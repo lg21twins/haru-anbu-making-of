@@ -4,7 +4,10 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { PhoneFrame } from "@/components/effects/PhoneFrame";
 
-const TOTAL_VH = 820;
+// 섹션 끝 = "이거야!" 페이드아웃 끝 시점에 맞춰 빈 검은 구간 제거
+// 원래 820vh + 페이드아웃 0.80 진행 → 1.0까지 144vh 빈 구간 발생
+// 676vh + M 값 1.25배 → 모든 진행 단계의 절대 위치는 동일하게 유지하면서 끝부분만 잘라냄
+const TOTAL_VH = 676;
 
 // 사람 일러스트/캐릭터 아바타 없는 audit-screenshot들로만 구성
 const explicit = [
@@ -27,23 +30,25 @@ const cascade = [
 
 const finalStage = { v: "v11_보호자앱", src: "/media/img/stages/v13.png" };
 
+// 원래 0.80에서 페이드아웃 끝 → 1.0이 되도록 1.25배 매핑
+// 절대 vh 위치는 TOTAL_VH 단축과 함께 동일하게 유지됨
 const M = {
-  v1In: 0.04,
-  v1Hold: 0.09,
-  retry1Peak: 0.16,
-  v2In: 0.19,
-  v2Hold: 0.24,
-  retry2Peak: 0.31,
-  v3In: 0.34,
-  v3Hold: 0.40,
-  v3Out: 0.49,
-  cascadeStart: 0.50,
-  cascadeEnd: 0.66,
-  thatsItIn: 0.67,
-  thatsItHold: 0.73,
-  thatsItOut: 0.80,
-  finalIn: 0.80,
-  finalHold: 0.88,
+  v1In: 0.05,
+  v1Hold: 0.11,
+  retry1Peak: 0.20,
+  v2In: 0.24,
+  v2Hold: 0.30,
+  retry2Peak: 0.39,
+  v3In: 0.42,
+  v3Hold: 0.50,
+  v3Out: 0.61,
+  cascadeStart: 0.625,
+  cascadeEnd: 0.825,
+  thatsItIn: 0.84,
+  thatsItHold: 0.91,
+  thatsItOut: 1.0,
+  finalIn: 1.0,
+  finalHold: 1.1,
 };
 
 function fadeBetween(
