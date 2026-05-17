@@ -83,19 +83,19 @@ function ChatBubble({ msg, show }: { msg: Msg; show: boolean }) {
       }}
     >
       <div
-        className={`max-w-[82%] rounded-2xl px-5 py-3 font-sans text-[15px] leading-relaxed md:text-base ${
+        className={`max-w-[88%] rounded-3xl px-7 py-5 font-sans text-[18px] leading-relaxed md:text-[22px] ${
           isMe
-            ? "bg-[color:var(--color-key)] text-black"
+            ? "bg-white text-black"
             : "border border-white/10 bg-white/[0.04] text-white/90"
         }`}
       >
         <p>{msg.text}</p>
         {msg.attempt && (
-          <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-4">
-            <div className="mx-auto aspect-square w-[120px]">
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-6">
+            <div className="mx-auto aspect-square w-[220px] md:w-[280px]">
               <AttemptPreview kind={msg.attempt} />
             </div>
-            <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">
+            <p className="mt-3 text-center font-mono text-[12px] uppercase tracking-[0.25em] text-white/40 md:text-[13px]">
               attempt 0{msg.attempt}
             </p>
           </div>
@@ -202,7 +202,7 @@ export function LogoEvolutionScene() {
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden bg-black">
         {/* 채팅 thread — 누적되면 안쪽을 위로 밀어서 최신 버블이 항상 보임 */}
         <div
-          className="absolute inset-0 flex items-end justify-center px-6 pb-[10vh] pt-[10vh] md:px-10"
+          className="absolute inset-0 flex items-end justify-center px-6 pb-[8vh] pt-[6vh] md:px-12"
           style={{
             opacity: chatOpacity,
             transition: "opacity 400ms ease-out",
@@ -211,13 +211,9 @@ export function LogoEvolutionScene() {
         >
           <div
             ref={viewportRef}
-            className="relative w-full max-w-2xl overflow-hidden"
+            className="relative w-full max-w-5xl overflow-hidden"
             style={{
-              maxHeight: "80vh",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 6%, #000 14%, #000 100%)",
-              maskImage:
-                "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 6%, #000 14%, #000 100%)",
+              maxHeight: "86vh",
             }}
           >
             <div

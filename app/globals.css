@@ -5,9 +5,9 @@
   --color-bg-soft: #0e1014;
   --color-fg: #f4f5f7;
   --color-fg-dim: #9aa0a6;
-  --color-key: #7eff8d;
-  --color-key-soft: #4dd96b;
-  --color-key-glow: rgba(126, 255, 141, 0.45);
+  --color-key: #ffffff;
+  --color-key-soft: rgba(255, 255, 255, 0.65);
+  --color-key-glow: rgba(255, 255, 255, 0.35);
   --color-accent: #2c7afc;
   --color-accent-pale: #74a8ff;
   --color-accent-violet: #7c4dff;
