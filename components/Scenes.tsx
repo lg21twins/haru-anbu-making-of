@@ -49,9 +49,6 @@ const PromptGrammarScene = dynamic(() =>
     (m) => m.PromptGrammarScene
   )
 );
-const AIStackScene = dynamic(() =>
-  import("@/components/scenes/AIStackScene").then((m) => m.AIStackScene)
-);
 const DailyWorkflowScene = dynamic(() =>
   import("@/components/scenes/DailyWorkflowScene").then(
     (m) => m.DailyWorkflowScene
@@ -161,7 +158,6 @@ export function Scenes() {
         {/* === 방법 === */}
         <div id="nav-method" className="block" />
         <PromptGrammarScene />
-        <AIStackScene />
         <DailyWorkflowScene />
 
         {/* === 회고: 자주 틀렸다 → 실패 갤러리 → 숫자 → 완성 === */}

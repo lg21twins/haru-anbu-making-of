@@ -254,6 +254,14 @@ const credits: Line[] = [
   { kind: "spacer", h: 8 },
   { kind: "title", text: "─ FIN ─" },
   { kind: "spacer", h: 14 },
+
+  { kind: "role", role: "Claude", name: "메인 파트너 · 기획·디자인·코드·시나리오" },
+  { kind: "role", role: "Higgsfield", name: "영상 디렉팅 · 1차→4차 진화" },
+  { kind: "role", role: "Figma", name: "디자인 본진 · 시스템·목업·핸드오프" },
+  { kind: "role", role: "VS Code", name: "코드 에디터 · v8 보호자앱 구현 환경" },
+  { kind: "role", role: "GPT", name: "이미지 생성 · 프롬프트·레퍼런스 비주얼" },
+  { kind: "role", role: "Codex", name: "코딩 검토 · 코드 리뷰·패치 제안" },
+  { kind: "spacer", h: 14 },
 ];
 
 const ANIMATION_DURATION_S = 70;
