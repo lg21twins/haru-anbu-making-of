@@ -39,9 +39,9 @@ const LogoEvolutionScene = dynamic(() =>
     (m) => m.LogoEvolutionScene
   )
 );
-const CodeWorkflowScene = dynamic(() =>
-  import("@/components/scenes/CodeWorkflowScene").then(
-    (m) => m.CodeWorkflowScene
+const CodeMaterializeScene = dynamic(() =>
+  import("@/components/scenes/CodeMaterializeScene").then(
+    (m) => m.CodeMaterializeScene
   )
 );
 const PromptGrammarScene = dynamic(() =>
@@ -108,7 +108,7 @@ export function Scenes() {
         {/* === 디자인 === */}
         <div id="nav-design" className="block" />
         <DesignIterationScene />
-        <CodeWorkflowScene />
+        <CodeMaterializeScene />
 
         {/* === 영상 === */}
         <div id="nav-video" className="block" />
