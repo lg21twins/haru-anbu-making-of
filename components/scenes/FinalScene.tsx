@@ -13,13 +13,6 @@ export function FinalScene() {
         >
           <TypeText text="하루안부." speed={140} startDelay={400} finalCursor />
         </p>
-        <a
-          href="/v1"
-          data-cursor="link"
-          className="mt-20 inline-flex items-center gap-3 font-mono text-xs tracking-[0.3em] text-white/45 transition-colors hover:text-[color:var(--color-key)]"
-        >
-          <span>자세히 보기 →</span>
-        </a>
       </div>
     </Scene>
   );
