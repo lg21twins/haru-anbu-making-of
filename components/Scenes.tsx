@@ -49,11 +49,6 @@ const PromptGrammarScene = dynamic(() =>
     (m) => m.PromptGrammarScene
   )
 );
-const DailyWorkflowScene = dynamic(() =>
-  import("@/components/scenes/DailyWorkflowScene").then(
-    (m) => m.DailyWorkflowScene
-  )
-);
 const FailuresGalleryScene = dynamic(() =>
   import("@/components/scenes/FailuresGalleryScene").then(
     (m) => m.FailuresGalleryScene
@@ -158,7 +153,6 @@ export function Scenes() {
         {/* === 방법 === */}
         <div id="nav-method" className="block" />
         <PromptGrammarScene />
-        <DailyWorkflowScene />
 
         {/* === 회고: 자주 틀렸다 → 실패 갤러리 → 숫자 → 완성 === */}
         <LineScene
