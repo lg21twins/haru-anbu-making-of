@@ -19,7 +19,7 @@ function HaruSymbol({ color }: { color: string }) {
       xmlns="http://www.w3.org/2000/svg"
       className="h-9 w-9"
       style={{
-        transition: "color 600ms cubic-bezier(0.2, 1, 0.4, 1)",
+        transition: "color 120ms ease-out, filter 200ms ease-out",
         color,
         filter: `drop-shadow(0 0 10px ${color}88)`,
       }}

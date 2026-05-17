@@ -128,8 +128,9 @@ export function LogoEvolutionScene() {
       const t = Math.max(0, Math.min(1, (progress - 0.03) / 0.55));
       setVisibleMsgs(Math.round(t * messages.length));
 
-      // 좌상단으로 날아간 뒤 색이 채워졌다고 알림
-      const shouldLand = progress >= 0.96;
+      // 비행 로고가 완전히 사라진 직후 햄버거 컬러 스냅
+      // fly 구간 0.82~0.97, 비행 페이드아웃 flyP 0.85~0.95 → 0.95 시점에 progress=0.9625
+      const shouldLand = progress >= 0.963;
       if (shouldLand && !landedRef.current) {
         landedRef.current = true;
         window.dispatchEvent(new CustomEvent("haru:logo-landed"));
@@ -192,8 +193,8 @@ export function LogoEvolutionScene() {
   // 좌상단 햄버거 중심 위치 ≈ 44px, 44px
   const tx = `calc((44px - 50vw) * ${fly})`;
   const ty = `calc((44px - 50vh) * ${fly})`;
-  // 도착 후엔 햄버거가 컬러로 채워지니까 비행 로고는 페이드아웃 (겹침 방지)
-  const arrivedFade = flyP < 0.92 ? 1 : Math.max(0, 1 - (flyP - 0.92) / 0.08);
+  // 비행 로고는 도착하기 전에 미리 사라져야 함 — 햄버거와 겹쳐서 두 색 보이는 문제 방지
+  const arrivedFade = flyP < 0.85 ? 1 : Math.max(0, 1 - (flyP - 0.85) / 0.1);
   const logoOpacity = logoFadeIn * arrivedFade;
 
   return (
