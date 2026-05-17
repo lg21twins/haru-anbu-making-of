@@ -371,9 +371,6 @@ export function CodeMaterializeScene() {
           >
             "이 화면 그대로 코드로 짜줘."
           </h2>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.28em] text-white/40 mix-blend-difference md:text-xs">
-            v11_보호자앱 / g-guardian-live.html
-          </p>
         </div>
 
         {/* 코드 패널 — 좌측 하단 플로팅 */}
