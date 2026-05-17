@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 // v11_보호자앱/g-guardian-live.html 의 실제 구조에서 따온 코드 청크
-// 위에서부터 한 글자씩 타이핑되며, 청크가 끝나면 우측 라이브 프리뷰가 점점 또렷해짐
 const chunks: string[] = [
   `<!doctype html>
 <html lang="ko">
@@ -46,12 +45,10 @@ const chunks: string[] = [
     </Widget>
     <Widget id="vital" icon="heart" tint="#2C7AFC">
       맥박 72 BPM
-      <VitalLine />
     </Widget>
     <Widget id="mood" icon="emoji">
       기분 87점 · 최근 28일
     </Widget>
-    <FoodCard image="image (16).png" />
   </section>`,
   `
 
@@ -70,12 +67,25 @@ const chunks: string[] = [
 const fullCode = chunks.join("");
 const TOTAL = fullCode.length;
 
-function syntaxColor(line: string) {
-  return line
-    .replace(/(&lt;\/?[\w!][\w-]*)/g, '<span style="color:#ff7b9c">$1</span>')
-    .replace(/([\w-]+)=/g, '<span style="color:#7eff8d">$1</span>=')
-    .replace(/(\{[^}]*\})/g, '<span style="color:#fbbf24">$1</span>')
-    .replace(/("[^"]*")/g, '<span style="color:#74a8ff">$1</span>');
+// 사전에 sentinel로 감싸고 한꺼번에 치환 — 중첩 매칭 방지
+function syntaxColor(escaped: string) {
+  // 태그명, 속성명=값, 따옴표 문자열, 표현식 {…}
+  let s = escaped
+    .replace(
+      /&quot;([^&]*?)&quot;/g,
+      "§S§&quot;$1&quot;§E§"
+    )
+    .replace(/(&lt;\/?[\w][\w-]*)/g, "§T§$1§E§")
+    .replace(/(\/?&gt;)/g, "§T§$1§E§")
+    .replace(/\b([\w-]+)=/g, "§A§$1§E§=")
+    .replace(/(\{[^}]*\})/g, "§X§$1§E§");
+  s = s
+    .replace(/§T§/g, '<span style="color:#ff7b9c">')
+    .replace(/§A§/g, '<span style="color:#7eff8d">')
+    .replace(/§S§/g, '<span style="color:#74a8ff">')
+    .replace(/§X§/g, '<span style="color:#fbbf24">')
+    .replace(/§E§/g, "</span>");
+  return s;
 }
 
 function escape(s: string) {
@@ -96,7 +106,7 @@ export function CodeMaterializeScene() {
       const range = el.offsetHeight - window.innerHeight;
       const scrolled = Math.max(0, Math.min(range, -rect.top));
       const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.06) / 0.86));
+      const t = Math.max(0, Math.min(1, (p - 0.05) / 0.88));
       setChars(Math.round(t * TOTAL));
     };
     const onScroll = () => {
@@ -116,7 +126,6 @@ export function CodeMaterializeScene() {
     };
   }, []);
 
-  // 코드 패널 자동 스크롤 — 항상 최신 줄이 보이게
   useEffect(() => {
     const pre = codeRef.current;
     if (!pre) return;
@@ -130,10 +139,12 @@ export function CodeMaterializeScene() {
       .map((l) => `<div>${syntaxColor(escape(l)) || "&nbsp;"}</div>`)
       .join("") + '<span class="caret caret-fat" aria-hidden></span>';
 
-  // 진행도 0~0.4: 코드만, 0.4~1: 프리뷰가 점점 또렷
+  // 코드 진행도 (0~1) → 위에서부터 노출되는 비율
+  // 0.05까지는 완전 가림, 1.0에서 완전 노출
   const codeProgress = chars / TOTAL;
-  const previewBlur = Math.max(0, 16 - codeProgress * 20);
-  const previewOpacity = Math.max(0.3, Math.min(1, codeProgress * 1.3));
+  const revealP = Math.max(0, Math.min(1, (codeProgress - 0.05) / 0.9));
+  // 위에서부터 revealP%만큼 보이고 나머지는 검은 오버레이로 가림
+  const hidePercent = (1 - revealP) * 100;
 
   return (
     <section ref={ref} className="relative w-full" style={{ height: "780vh" }}>
@@ -150,21 +161,37 @@ export function CodeMaterializeScene() {
           </p>
         </div>
 
-        {/* 라이브 프리뷰 — 화면 가득 (iframe) */}
-        <div
-          className="absolute inset-0 flex items-center justify-center pt-24 md:pt-28"
-          style={{
-            opacity: previewOpacity,
-            filter: `blur(${previewBlur}px)`,
-            transition: "opacity 240ms linear, filter 240ms linear",
-          }}
-        >
-          <iframe
-            src="/v11-preview/index.html"
-            title="v11 보호자앱 라이브 프리뷰"
-            className="h-[78vh] w-[min(420px,90vw)] rounded-[40px] border border-white/10 bg-white shadow-[0_30px_80px_-20px_rgba(44,122,252,0.45)]"
-            style={{ pointerEvents: "none" }}
-          />
+        {/* 라이브 프리뷰 — 풀와이드 iframe + 위에서부터 reveal 마스크 */}
+        <div className="absolute inset-0 flex items-center justify-center pt-24 md:pt-28">
+          <div className="relative h-[82vh] w-screen overflow-hidden">
+            <iframe
+              src="/v11-preview/index.html"
+              title="v11 보호자앱 라이브 프리뷰"
+              className="h-full w-full border-0 bg-white"
+              style={{ pointerEvents: "none" }}
+            />
+            {/* 위에서부터 노출 마스크 — 하단을 검정으로 덮음 */}
+            <div
+              className="pointer-events-none absolute inset-0 bg-black"
+              style={{
+                clipPath: `inset(${100 - hidePercent}% 0 0 0)`,
+                transition: "clip-path 240ms linear",
+              }}
+            />
+            {/* 노출 경계선 — 코드가 막 도착한 자리 */}
+            {revealP > 0 && revealP < 1 && (
+              <div
+                className="pointer-events-none absolute inset-x-0 h-[2px]"
+                style={{
+                  top: `${revealP * 100}%`,
+                  background:
+                    "linear-gradient(90deg, transparent, #7eff8d 50%, transparent)",
+                  boxShadow: "0 0 16px rgba(126,255,141,0.8)",
+                  transition: "top 240ms linear",
+                }}
+              />
+            )}
+          </div>
         </div>
 
         {/* 코드 패널 — 좌측 하단 플로팅 */}
