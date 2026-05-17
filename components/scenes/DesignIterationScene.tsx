@@ -25,7 +25,7 @@ const cascade = [
   { v: "v12", src: "/media/img/stages/v12.png" },
 ];
 
-const finalStage = { v: "v13", src: "/media/img/stages/v13.png" };
+const finalStage = { v: "v11_보호자앱", src: "/media/img/stages/v13.png" };
 
 const M = {
   v1In: 0.04,
@@ -172,13 +172,22 @@ export function DesignIterationScene() {
               transition: "transform 200ms linear",
             }}
           >
-            <PhoneFrame size="lg">
-              <Layer src={explicit[0].src} opacity={v1Op} />
-              <Layer src={explicit[1].src} opacity={v2Op} />
-              <Layer src={explicit[2].src} opacity={v3Op} />
-              <Layer src={cascade[cascadeIdx].src} opacity={cascadeOp} />
-              <Layer src={finalStage.src} opacity={finalOp} priority />
-            </PhoneFrame>
+            {/* '이거야!' / 최종 단계부터 폰 프레임 사라짐 — 카피/이미지만 노출 */}
+            <div
+              style={{
+                opacity: Math.max(0, 1 - Math.max(thatsItOp, finalOp)),
+                transition: "opacity 280ms ease-out",
+                pointerEvents:
+                  Math.max(thatsItOp, finalOp) > 0.5 ? "none" : "auto",
+              }}
+            >
+              <PhoneFrame size="lg">
+                <Layer src={explicit[0].src} opacity={v1Op} />
+                <Layer src={explicit[1].src} opacity={v2Op} />
+                <Layer src={explicit[2].src} opacity={v3Op} />
+                <Layer src={cascade[cascadeIdx].src} opacity={cascadeOp} />
+              </PhoneFrame>
+            </div>
 
             {showRetry > 0 && (
               <div
@@ -200,7 +209,7 @@ export function DesignIterationScene() {
 
             {thatsItOp > 0 && (
               <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible"
+                className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center overflow-visible"
                 style={{ opacity: thatsItOp }}
               >
                 <p
@@ -257,7 +266,7 @@ function Progress({ p }: { p: number }) {
     { label: "v02", end: M.v3In },
     { label: "v03", end: M.cascadeStart },
     { label: "...", end: M.cascadeEnd },
-    { label: "v13", end: 1 },
+    { label: "v11_보호자앱", end: 1 },
   ];
   const activeIdx = segments.findIndex((s) => p < s.end);
   const idx = activeIdx === -1 ? segments.length - 1 : activeIdx;
