@@ -2,99 +2,128 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// v11_보호자앱/g-guardian-live.html 구조를 따라 단계별로 등장
-// 각 청크는 코드가 그만큼 타이핑되면 화면에 해당 요소가 나타남
-type Step =
-  | "bg"
-  | "gradient"
-  | "topbar"
-  | "greet"
-  | "report"
-  | "widgets"
-  | "tabbar";
+// v11_보호자앱/g-guardian-live.html 첫 화면을 정확히 재현
+// 스크롤 단계별 등장: bg → orb → topnav → greet → report → tabbar
+type Step = "bg" | "orb" | "topnav" | "greet" | "report" | "tabbar";
 
 type Chunk = { code: string; step: Step };
 
 const chunks: Chunk[] = [
   {
     step: "bg",
-    code: `<!doctype html>
+    code: `<!DOCTYPE html>
 <html lang="ko">
-<body class="guardian">
-  <main class="canvas">`,
+<head>
+  <title>하루안부 — 보호자 홈</title>
+  <style>
+    html, body { background:#f8fbff; }
+  </style>
+</head>
+<body>`,
   },
   {
-    step: "gradient",
+    step: "orb",
     code: `
 
-  <div class="bg-blob"
-       style="background: radial-gradient(
-         circle at 50% 60%,
-         #93d8ff 0%,
-         #b8e6ff 25%,
-         #e9f5ff 55%,
-         #ffffff 100%
-       );" />`,
+  <!-- AI 오브 (영구 배경) -->
+  <div class="ai-orb-bg">
+    <div class="ai-orb"
+         style="background: radial-gradient(
+           circle at 50% 32%,
+           #1BE7EA 0%,
+           rgba(70,195,230,.95) 38%,
+           #46A8FF 72%,
+           rgba(70,168,255,.3) 88%,
+           transparent 100%
+         );
+         filter: blur(24px);" />
+  </div>`,
   },
   {
-    step: "topbar",
+    step: "topnav",
     code: `
 
-  <header class="topbar">
-    <Logo brand="하루안부" />
-    <button aria-label="알림">🔔</button>
-    <button aria-label="프로필">👤</button>
-  </header>`,
+  <div class="chat-fixed">
+    <nav class="top-nav">
+      <button class="logo" aria-label="대화 기록">
+        <svg viewBox="0 0 512 512">
+          <path d="M2521.32 2506.66C1239.65..."
+                fill="#2C7AFC"/>
+        </svg>
+      </button>
+      <div class="top-nav-right">
+        <a class="nav-btn" aria-label="알림">
+          <iconify-icon icon="fluent:alert-24-filled"/>
+          <span class="notif-dot"/>
+        </a>
+        <a class="nav-btn" aria-label="프로필">
+          <iconify-icon icon="fluent:person-24-filled"/>
+        </a>
+      </div>
+    </nav>`,
   },
   {
     step: "greet",
     code: `
 
-  <section class="greet">
-    <h1>오늘도 수고하셨어요,
-정희님 잘 있어요</h1>
-    <p>저녁 일과도 잘 되고 있어요.</p>
-  </section>`,
+    <div class="greeting-zone">
+      <h1 class="greeting-main">
+        오늘도 수고하셨어요,<br>
+        정희님 잘 있어요
+      </h1>
+      <p class="greeting-sub">
+        저녁 일과도 잘 되고 있어요.
+      </p>
+    </div>
+  </div>`,
   },
   {
     step: "report",
     code: `
 
-  <section class="daily-report">
-    <header>
-      <h2>일일 리포트</h2>
-      <time>5월 17일 (일)</time>
-    </header>
-    <article class="moment-card">
-      <img src="mockup.png" alt="오늘의 순간" />
-      <blockquote>"오전 산책 때 햇빛이 좋아서
-한참 머무르셨어요."</blockquote>
-      <cite>— 김미영 간호사 · 10:24</cite>
-    </article>
-  </section>`,
-  },
-  {
-    step: "widgets",
-    code: `
-
-  <section class="widgets">
-    <Widget icon="pill"  label="투약"  value="33%" />
-    <Widget icon="heart" label="맥박"  value="72 BPM" />
-    <Widget icon="emoji" label="기분"  value="87점" />
-  </section>`,
+  <div class="app">
+    <div class="report-sheet">
+      <div class="sheet-drag">
+        <div class="sheet-drag-pill"/>
+      </div>
+      <div class="section-header">
+        <div class="section-title">일일 리포트</div>
+        <div class="section-date">5월 17일 (일)</div>
+      </div>
+      <a class="moment-card">
+        <div class="moment-photo"/>
+        <div class="moment-body">
+          <div class="moment-quote">
+            "오전 산책 때 햇빛이 좋아서
+한참 머무르셨어요."
+          </div>
+          <div class="moment-meta">
+            김미영 간호사 · 10:24
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>`,
   },
   {
     step: "tabbar",
     code: `
 
-  <nav class="tabbar">
-    <Tab icon="home" active />
-    <Tab icon="records" />
-    <Tab icon="chat" />
-    <Tab icon="reports" />
-    <Tab icon="profile" />
-  </nav>
-</main>
+  <div class="bottom-bar">
+    <nav class="tabbar">
+      <a class="tab active"><home/></a>
+      <a class="tab"><book/></a>
+      <a class="tab"><chat/></a>
+      <a class="tab"><folder/></a>
+      <a class="tab"><person/></a>
+    </nav>
+    <button class="ai-fab">
+      <svg viewBox="0 0 2526 2526">
+        <path fill="#2C7AFC" d="..."/>
+      </svg>
+    </button>
+  </div>
+
 </body>
 </html>`,
   },
@@ -103,7 +132,6 @@ const chunks: Chunk[] = [
 const fullCode = chunks.map((c) => c.code).join("");
 const TOTAL = fullCode.length;
 
-// 각 청크 끝 위치
 const checkpoints = chunks.reduce<{ step: Step; at: number }[]>((acc, c) => {
   const prev = acc.length ? acc[acc.length - 1].at : 0;
   acc.push({ step: c.step, at: prev + c.code.length });
@@ -128,6 +156,24 @@ function syntaxColor(escaped: string) {
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// 하루안부 X 로고 (실제 v11 코드와 동일)
+function HaruLogo({ size = 30, fill = "#2C7AFC" }: { size?: number; fill?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="none">
+      <g transform="translate(50,50) scale(0.163)">
+        <path
+          d="M2521.32 2506.66C1239.65 2657.48 1239.65 1895.6 1239.65 1279.34L2497.69 0C2518.68 494.198 2522.27 1157.92 1658.86 1262.48C2641.88 1314.25 2521.32 2101.84 2521.32 2506.66Z"
+          fill={fill}
+        />
+        <path
+          d="M4.677 19.335C1286.35 -131.481 1286.35 630.399 1286.35 1246.66L28.315 2526C7.322 2031.8 3.73 1368.08 867.143 1263.52C-115.881 1211.75 4.677 424.157 4.677 19.335Z"
+          fill={fill}
+        />
+      </g>
+    </svg>
+  );
 }
 
 export function CodeMaterializeScene() {
@@ -177,13 +223,11 @@ export function CodeMaterializeScene() {
       .map((l) => `<div>${syntaxColor(escapeHtml(l)) || "&nbsp;"}</div>`)
       .join("") + '<span class="caret caret-fat" aria-hidden></span>';
 
-  // 단계별 노출 여부 — 해당 청크 끝까지 타이핑됐을 때 등장
   const reached = (step: Step) => {
     const cp = checkpoints.find((c) => c.step === step);
     return cp ? chars >= cp.at : false;
   };
   const partial = (step: Step) => {
-    // 청크 진행도(0~1)
     const idx = checkpoints.findIndex((c) => c.step === step);
     if (idx === -1) return 0;
     const prev = idx === 0 ? 0 : checkpoints[idx - 1].at;
@@ -203,167 +247,182 @@ export function CodeMaterializeScene() {
   return (
     <section ref={ref} className="relative w-full" style={{ height: "780vh" }}>
       <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-black">
-        {/* 1) 흰 배경 — 첫 청크 진행만큼 나타남 */}
+        {/* 1) 흰 캔버스 (#f8fbff) — 첫 청크 진행만큼 페이드 인 */}
         <div
-          className="absolute inset-0 bg-white"
+          className="absolute inset-0"
           style={{
+            background: "#f8fbff",
             opacity: partial("bg"),
             transition: "opacity 480ms ease-out",
           }}
         />
 
-        {/* 2) 블루 라디얼 그라데이션 */}
+        {/* 2) AI orb — 큰 원형 그라데이션 (560x560), v11 정확 재현 */}
         <div
-          className="absolute inset-0"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[1]"
           style={{
-            background:
-              "radial-gradient(circle at 50% 62%, #93d8ff 0%, #b8e6ff 22%, #e9f5ff 55%, #ffffff 100%)",
-            opacity: reached("gradient") ? 1 : partial("gradient"),
+            width: "min(560px, 110vw)",
+            height: "min(560px, 110vw)",
+            transform: "translate(-50%, -50%)",
+            opacity: reached("orb") ? 1 : partial("orb"),
             transition: "opacity 720ms cubic-bezier(0.2, 1, 0.4, 1)",
           }}
-        />
+        >
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 32%, #1BE7EA 0%, rgba(70,195,230,0.95) 38%, #46A8FF 72%, rgba(70,168,255,0.3) 88%, transparent 100%)",
+              filter: "blur(24px)",
+              animation: reached("orb") ? "orb-breath 7s ease-in-out infinite" : undefined,
+            }}
+          />
+        </div>
 
-        {/* 본문 컨테이너 — 폰 비율 안에 UI 요소들이 차곡차곡 */}
-        <div className="relative z-10 flex h-screen w-full flex-col items-center justify-start px-6 pt-[10vh] md:pt-[12vh]">
-          <div className="flex w-full max-w-[460px] flex-col">
-            {/* 3) 탑바 — 로고 + 알림 + 프로필 */}
-            <div
-              className="flex items-center justify-between"
-              style={reveal("topbar")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-7 w-7 rotate-12">
-                  <svg viewBox="0 0 512 512" className="h-full w-full">
-                    <g
-                      transform="translate(50, 50) scale(0.163)"
-                      fill="#2c7afc"
-                    >
-                      <path d="M2521.32 2506.66C1239.65 2657.48 1239.65 1895.6 1239.65 1279.34L2497.69 0.000170058C2518.68 494.198 2522.27 1157.92 1658.86 1262.48C2641.88 1314.25 2521.32 2101.84 2521.32 2506.66Z" />
-                      <path d="M4.6772 19.3353C1286.35 -131.481 1286.35 630.399 1286.35 1246.66L28.3145 2526C7.32194 2031.8 3.73014 1368.08 867.143 1263.52C-115.881 1211.75 4.6772 424.157 4.6772 19.3353Z" />
-                    </g>
-                  </svg>
-                </span>
-                <span className="font-sans font-bold tracking-tight text-[#0a1a2e]">
-                  하루안부
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[#2c7afc] shadow-sm">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-5 w-5"
+        <style>{`
+          @keyframes orb-breath {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.12) translateY(-12px); }
+          }
+        `}</style>
+
+        {/* 본문 컨테이너 — max-width 430px 모바일 앱 영역 */}
+        <div className="relative z-10 flex h-screen w-full justify-center px-4">
+          <div className="relative flex h-full w-full max-w-[430px] flex-col pt-[max(env(safe-area-inset-top),24px)] pb-[100px]">
+            {/* 3) top-nav — 좌측 X 로고 버튼 + 우측 알림/프로필 */}
+            <div className="px-6" style={reveal("topnav")}>
+              <nav className="flex items-center justify-between">
+                <button
+                  className="-m-1 flex items-center gap-2 bg-transparent p-1"
+                  aria-label="대화 기록"
+                >
+                  <HaruLogo size={30} fill="#2C7AFC" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <a
+                    aria-label="알림"
+                    className="relative grid h-9 w-9 place-items-center rounded-full bg-white/55 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)] ring-[0.5px] ring-white/55"
                   >
-                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-                  </svg>
-                </span>
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-white/85 text-[#2c7afc] shadow-sm">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-5 w-5"
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#2C7AFC]" fill="currentColor">
+                      <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                    </svg>
+                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#FF3B30] ring-[1.5px] ring-white/70" />
+                  </a>
+                  <a
+                    aria-label="프로필"
+                    className="grid h-9 w-9 place-items-center rounded-full bg-white/55 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)] ring-[0.5px] ring-white/55"
                   >
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
-                </span>
-              </div>
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#2C7AFC]" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                  </a>
+                </div>
+              </nav>
             </div>
 
-            {/* 4) 인사말 */}
-            <div className="mt-10" style={reveal("greet")}>
-              <h1 className="font-sans text-[26px] font-bold leading-[1.25] tracking-tight text-[#0a1a2e] md:text-[30px]">
+            {/* 4) greeting-zone — "오늘도 수고하셨어요, 정희님 잘 있어요" */}
+            <div className="px-6 pt-[46px]" style={reveal("greet")}>
+              <h1
+                className="font-bold leading-[1.18] tracking-[-0.85px] text-[#2a1810]"
+                style={{
+                  fontSize: "28px",
+                  textShadow: "0 1px 0 rgba(255,255,255,.2)",
+                }}
+              >
                 오늘도 수고하셨어요,
                 <br />
                 정희님 잘 있어요
               </h1>
-              <p className="mt-2 text-sm text-[#4a5a72] md:text-base">
+              <p
+                className="mt-2 font-medium leading-[1.45] text-[rgba(42,24,16,0.62)]"
+                style={{ fontSize: "15px" }}
+              >
                 저녁 일과도 잘 되고 있어요.
               </p>
             </div>
 
-            {/* 5) 일일 리포트 카드 */}
-            <div className="mt-8" style={reveal("report")}>
-              <div className="rounded-3xl bg-white/90 p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] backdrop-blur">
+            {/* 5) 일일 리포트 sheet — 하단에 카드 형태로 슬라이드 업 */}
+            <div
+              className="absolute bottom-[100px] left-0 right-0 mx-auto w-full"
+              style={reveal("report")}
+            >
+              <div className="mx-3 rounded-t-[28px] bg-white/96 px-5 pt-3 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur">
+                {/* drag pill */}
+                <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-black/15" />
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-[#0a1a2e]">
+                  <div className="text-[15px] font-bold tracking-[-0.4px] text-[#1C1C1E]">
                     일일 리포트
-                  </h2>
-                  <time className="text-xs text-[#94a3b8]">5월 17일 (일)</time>
+                  </div>
+                  <div className="text-[11px] font-medium text-black/40">
+                    5월 17일 (일)
+                  </div>
                 </div>
                 <div className="overflow-hidden rounded-2xl">
                   <div
-                    className="h-[140px] w-full bg-cover bg-center md:h-[160px]"
+                    className="h-[160px] w-full bg-cover bg-center"
                     style={{ backgroundImage: "url(/v11-preview/mockup.png)" }}
                   />
                 </div>
-                <blockquote className="mt-3 text-sm text-[#0a1a2e]">
-                  "오전 산책 때 햇빛이 좋아서 한참 머무르셨어요."
-                </blockquote>
-                <cite className="mt-2 block text-xs not-italic text-[#94a3b8]">
-                  — 김미영 간호사 · 10:24
-                </cite>
+                <div className="mt-3 text-[13.5px] leading-[1.5] font-medium text-[#1C1C1E]">
+                  "오전 산책 때 햇빛이 좋아서 한참 머무르셨어요.
+                  <br />
+                  기분이 정말 좋아 보이셨어요."
+                </div>
+                <div className="mt-2 text-[11.5px] font-medium text-black/45">
+                  ─ 김미영 간호사 · 10:24
+                </div>
               </div>
             </div>
 
-            {/* 6) 위젯 3개 */}
-            <div className="mt-3 grid grid-cols-3 gap-2" style={reveal("widgets")}>
-              <div className="rounded-2xl bg-white/90 p-3 shadow-sm">
-                <div className="flex items-center gap-1 text-[10px] text-[#10b981]">
-                  💊 <span className="font-bold text-[#0a1a2e]">투약</span>
-                </div>
-                <div className="mt-1 text-[22px] font-bold leading-none text-[#0a1a2e]">
-                  33<span className="text-xs text-black/40">%</span>
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">1/3 복용</div>
-              </div>
-              <div className="rounded-2xl bg-white/90 p-3 shadow-sm">
-                <div className="flex items-center gap-1 text-[10px] text-[#ef4444]">
-                  ❤ <span className="font-bold text-[#0a1a2e]">맥박</span>
-                </div>
-                <div className="mt-1 text-[22px] font-bold leading-none text-[#0a1a2e]">
-                  72<span className="text-xs text-black/40">BPM</span>
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">정상 범위</div>
-              </div>
-              <div className="rounded-2xl bg-white/90 p-3 shadow-sm">
-                <div className="flex items-center gap-1 text-[10px] text-[#2c7afc]">
-                  😊 <span className="font-bold text-[#0a1a2e]">기분</span>
-                </div>
-                <div className="mt-1 text-[22px] font-bold leading-none text-[#0a1a2e]">
-                  87<span className="text-xs text-black/40">점</span>
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">최근 28일</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 7) 탭바 — 화면 하단 고정 */}
-          <div
-            className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-6"
-            style={reveal("tabbar")}
-          >
-            <div className="flex items-center gap-6 rounded-full border border-white/50 bg-white/65 px-5 py-2.5 backdrop-blur shadow-[0_8px_30px_rgba(0,0,0,0.1)]">
-              {[
-                { icon: "🏠", active: true },
-                { icon: "📄" },
-                { icon: "💬" },
-                { icon: "📋" },
-                { icon: "👤" },
-              ].map((t, i) => (
-                <span
-                  key={i}
-                  className={`grid h-9 w-9 place-items-center rounded-full text-lg ${
-                    t.active ? "bg-[#2c7afc] text-white" : "text-[#64748b]"
-                  }`}
-                >
-                  {t.icon}
+            {/* 6) bottom-bar — 둥근 탭바 + AI FAB */}
+            <div
+              className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2"
+              style={reveal("tabbar")}
+            >
+              <nav className="flex items-center gap-1 rounded-full border border-white/55 bg-white/65 px-3 py-2 shadow-[0_8px_30px_rgba(0,0,0,0.1)] backdrop-blur">
+                {/* 홈 (active) */}
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#2C7AFC] text-white">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                    <path d="M12 3l9 8h-2v9h-5v-6h-4v6H5v-9H3l9-8z" />
+                  </svg>
                 </span>
-              ))}
+                {/* 가이드(책) */}
+                <span className="grid h-10 w-10 place-items-center text-[#64748b]">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                    <path d="M6 2h11a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm0 2v16h11V4H6z" />
+                  </svg>
+                </span>
+                {/* 소통(말풍선) */}
+                <span className="grid h-10 w-10 place-items-center text-[#64748b]">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 5.81 2 10.5c0 2.65 1.56 5.02 4 6.56V22l4.34-2.41c.54.07 1.1.11 1.66.11 5.52 0 10-3.81 10-8.5S17.52 2 12 2z" />
+                  </svg>
+                </span>
+                {/* 기록(폴더) */}
+                <span className="grid h-10 w-10 place-items-center text-[#64748b]">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                    <path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z" />
+                  </svg>
+                </span>
+                {/* 마이(사람) */}
+                <span className="grid h-10 w-10 place-items-center text-[#64748b]">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </span>
+              </nav>
+              {/* AI FAB — 둥근 흰 버튼 + X 로고 */}
+              <button
+                aria-label="AI와 대화하기"
+                className="grid h-12 w-12 place-items-center rounded-full bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+              >
+                <HaruLogo size={22} fill="#2C7AFC" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* 타이틀 — 항상 상단 */}
+        {/* 타이틀 — 상단 (mix-blend-difference로 흰/검 자동 대응) */}
         <div className="absolute inset-x-0 top-6 z-30 px-6 text-center md:top-10">
           <h2
             className="font-sans font-semibold text-white mix-blend-difference"
