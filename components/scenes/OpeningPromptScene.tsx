@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
 
 const fullText = `자 넌 이제부터
 우리의 프로젝트 "하루안부"를 담당할
@@ -18,40 +19,26 @@ UX 리서처이자
 카피라이터이자
 프롬프트 엔지니어야.`;
 
-// 섹션 높이 = 100vh(고정 뷰) + SCROLL_VH(타이핑 구간)
-const SCROLL_VH = 260;
-const TAIL_VH = 60;
-// 스크롤이 아무리 빨라도 한 글자당 최소 이 ms는 걸린다 (≈ 33 cps 캡)
-const MIN_MS_PER_CHAR = 30;
+// 자동 타이핑 — 들어오면 락 걸리고, 다 쳐질 때까지 스크롤 막힌 뒤 다음 씬으로.
+const PLAY_MS = 5200;
+const HOLD_AFTER_MS = 1000;
+const MIN_CLICK_GAP_MS = 38;
 
 export function OpeningPromptScene() {
   const sectionRef = useRef<HTMLElement>(null);
   const [chars, setChars] = useState(0);
-  const charsRef = useRef(0);
-  const targetRef = useRef(0);
-  const lastTickMsRef = useRef(0);
+  const startedRef = useRef(false);
+  const lockRef = useRef<ScrollLock | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const lastClickRef = useRef(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const el = sectionRef.current;
+    if (typeof window === "undefined" || !el) return;
 
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (reduce) {
-      setChars(fullText.length);
-      return;
-    }
-
-    let prevRestoration: ScrollRestoration | null = null;
-    if ("scrollRestoration" in history) {
-      prevRestoration = history.scrollRestoration;
-      history.scrollRestoration = "manual";
-    }
-    if (!window.location.hash) {
-      window.scrollTo(0, 0);
-    }
 
     const ensureAudio = () => {
       if (audioCtxRef.current) return audioCtxRef.current;
@@ -69,8 +56,20 @@ export function OpeningPromptScene() {
       return audioCtxRef.current;
     };
 
-    // 기계식 키 클릭 — noise 트랜션트(클랙) + 짧은 저역 thunk + 살짝의 고역 팝
+    // 첫 사용자 제스처에 오디오 컨텍스트 미리 해제 (자동재생이라도 소리 나게)
+    const unlockAudio = () => {
+      const ctx = ensureAudio();
+      if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+    };
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+    window.addEventListener("wheel", unlockAudio, { once: true, passive: true });
+    window.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
+
     const playKeyClick = () => {
+      const now = performance.now();
+      if (now - lastClickRef.current < MIN_CLICK_GAP_MS) return;
+      lastClickRef.current = now;
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(2);
@@ -81,11 +80,9 @@ export function OpeningPromptScene() {
       const ctx = ensureAudio();
       if (!ctx || ctx.state === "closed") return;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
-
       try {
-        const now = ctx.currentTime;
-
-        // 1) 클랙(고역 noise 버스트)
+        const t = ctx.currentTime;
+        // 클랙 (고역 noise 버스트)
         const burstLen = Math.floor(ctx.sampleRate * 0.045);
         const noiseBuf = ctx.createBuffer(1, burstLen, ctx.sampleRate);
         const data = noiseBuf.getChannelData(0);
@@ -95,117 +92,113 @@ export function OpeningPromptScene() {
         }
         const noise = ctx.createBufferSource();
         noise.buffer = noiseBuf;
-
         const bp = ctx.createBiquadFilter();
         bp.type = "bandpass";
         bp.frequency.value = 2400 + Math.random() * 600;
         bp.Q.value = 1.4;
-
         const nGain = ctx.createGain();
-        nGain.gain.setValueAtTime(0.0001, now);
-        nGain.gain.exponentialRampToValueAtTime(0.085, now + 0.002);
-        nGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
-
+        nGain.gain.setValueAtTime(0.0001, t);
+        nGain.gain.exponentialRampToValueAtTime(0.085, t + 0.002);
+        nGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
         noise.connect(bp);
         bp.connect(nGain);
         nGain.connect(ctx.destination);
-        noise.start(now);
-
-        // 2) thunk(저역 짧은 사인)
+        noise.start(t);
+        // thunk (저역 짧은 사인)
         const osc = ctx.createOscillator();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(95 + Math.random() * 25, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + 0.05);
+        osc.frequency.setValueAtTime(95 + Math.random() * 25, t);
+        osc.frequency.exponentialRampToValueAtTime(60, t + 0.05);
         const oGain = ctx.createGain();
-        oGain.gain.setValueAtTime(0.0001, now);
-        oGain.gain.exponentialRampToValueAtTime(0.055, now + 0.003);
-        oGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+        oGain.gain.setValueAtTime(0.0001, t);
+        oGain.gain.exponentialRampToValueAtTime(0.055, t + 0.003);
+        oGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
         osc.connect(oGain);
         oGain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.08);
-
-        // 3) 살짝의 고역 클릭(세밀한 tick)
-        const tickOsc = ctx.createOscillator();
-        tickOsc.type = "triangle";
-        tickOsc.frequency.value = 3200 + Math.random() * 400;
-        const tGain = ctx.createGain();
-        tGain.gain.setValueAtTime(0.0001, now);
-        tGain.gain.exponentialRampToValueAtTime(0.02, now + 0.001);
-        tGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.018);
-        tickOsc.connect(tGain);
-        tGain.connect(ctx.destination);
-        tickOsc.start(now);
-        tickOsc.stop(now + 0.025);
+        osc.start(t);
+        osc.stop(t + 0.08);
       } catch {
         /* noop */
       }
     };
 
-    const computeTarget = () => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || 1;
-      const scrolled = Math.max(0, -rect.top);
-      const total = (SCROLL_VH / 100) * vh;
-      const progress = Math.max(0, Math.min(1, scrolled / total));
-      targetRef.current = Math.round(progress * fullText.length);
-    };
+    let rafId: number | null = null;
+    let holdTimer: number | null = null;
 
-    const loop = (now: number) => {
-      // 타겟 따라잡기 — 한 글자당 MIN_MS_PER_CHAR 간격 유지, 글자마다 클릭음
-      const tgt = targetRef.current;
-      const cur = charsRef.current;
-      if (cur < tgt) {
-        if (!lastTickMsRef.current) lastTickMsRef.current = now;
-        if (now - lastTickMsRef.current >= MIN_MS_PER_CHAR) {
-          const next = cur + 1;
-          charsRef.current = next;
-          setChars(next);
-          playKeyClick();
-          lastTickMsRef.current = now;
-        }
-      } else if (cur > tgt) {
-        // 스크롤 뒤로가면 즉시 줄임 (사운드 X)
-        charsRef.current = tgt;
-        setChars(tgt);
-        lastTickMsRef.current = 0;
-      } else {
-        // 같음 — 다음 진행 때 즉시 시작 가능하게
-        lastTickMsRef.current = 0;
+    const finish = () => {
+      const node = sectionRef.current;
+      if (!node) {
+        lockRef.current?.release();
+        lockRef.current = null;
+        return;
       }
-      rafRef.current = requestAnimationFrame(loop);
+      const nextTop = node.offsetTop + node.offsetHeight;
+      releaseAndAdvance(lockRef.current, nextTop, () => {});
+      lockRef.current = null;
     };
 
-    computeTarget();
-    rafRef.current = requestAnimationFrame(loop);
-    window.addEventListener("scroll", computeTarget, { passive: true });
-    window.addEventListener("resize", computeTarget);
+    const start = () => {
+      if (reduce) {
+        setChars(fullText.length);
+        return;
+      }
+      const t0 = performance.now();
+      let last = 0;
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - t0) / PLAY_MS);
+        const n = Math.round(p * fullText.length);
+        if (n !== last) {
+          if (n > last) playKeyClick();
+          last = n;
+          setChars(n);
+        }
+        if (p < 1) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          setChars(fullText.length);
+          holdTimer = window.setTimeout(finish, HOLD_AFTER_MS);
+        }
+      };
+      rafId = requestAnimationFrame(tick);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e?.isIntersecting && e.intersectionRatio >= 0.85 && !startedRef.current) {
+          startedRef.current = true;
+          io.disconnect();
+          const node = sectionRef.current;
+          if (node && !reduce) lockRef.current = lockScrollAt(node.offsetTop);
+          start();
+        }
+      },
+      { threshold: [0.85, 1] }
+    );
+    io.observe(el);
 
     return () => {
-      window.removeEventListener("scroll", computeTarget);
-      window.removeEventListener("resize", computeTarget);
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-      if (prevRestoration && "scrollRestoration" in history) {
-        history.scrollRestoration = prevRestoration;
-      }
+      io.disconnect();
+      if (rafId != null) cancelAnimationFrame(rafId);
+      if (holdTimer != null) window.clearTimeout(holdTimer);
+      lockRef.current?.release();
+      lockRef.current = null;
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+      window.removeEventListener("wheel", unlockAudio);
+      window.removeEventListener("touchstart", unlockAudio);
       audioCtxRef.current?.close().catch(() => {});
       audioCtxRef.current = null;
     };
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative w-full"
-      style={{ height: `calc(100vh + ${SCROLL_VH + TAIL_VH}vh)` }}
-    >
-      <div className="sticky top-0 flex h-screen w-full items-end justify-center overflow-hidden bg-black">
-        <div className="w-full px-6 pb-[14vh] md:px-16 md:pb-[16vh]">
+    <section ref={sectionRef} className="relative w-full" style={{ height: "100vh" }}>
+      <div className="flex h-full w-full items-center justify-center overflow-hidden bg-black">
+        <div className="w-full px-6 md:px-16">
           <h1
-            className="font-sans font-semibold leading-[1.06] tracking-tight text-white whitespace-pre-line"
-            style={{ fontSize: "clamp(2.4rem, 6.4vw, 6rem)" }}
+            className="font-sans font-semibold tracking-tight text-white whitespace-pre-line"
+            style={{ fontSize: "clamp(1.5rem, 3.2vw, 2.7rem)", lineHeight: 1.2 }}
           >
             {fullText.slice(0, chars)}
             <span className="caret" aria-hidden />

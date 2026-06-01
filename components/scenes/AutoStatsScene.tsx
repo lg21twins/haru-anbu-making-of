@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
 
 type Stat = {
   to: number;
@@ -19,8 +20,7 @@ const stats: Stat[] = [
     label: "줄의 디자인 수정 명령.",
     format: (n) => n.toLocaleString(),
   },
-  { to: 228, label: "번의 재제작 요청." },
-  { to: 106, label: "일간의 대장정." },
+  { to: 228, label: "번의 재시도." },
 ];
 
 // 단위: ms
@@ -29,19 +29,8 @@ const HOLD_MS = 1200;
 const HOLD_FINAL_MS = 1700;
 const FADE_MS = 400;
 const GAP_MS = 120;
-const TEAM_IN_DELAY = 220;
-const TEAM_HOLD_MS = 1800;
 
-type Phase =
-  | "idle"
-  | "in"
-  | "hold"
-  | "out"
-  | "team-in"
-  | "team-hold"
-  | "team-out"
-  | "scrolling"
-  | "done";
+type Phase = "idle" | "in" | "hold" | "out" | "scrolling" | "done";
 
 export function AutoStatsScene() {
   const ref = useRef<HTMLElement>(null);
@@ -51,86 +40,47 @@ export function AutoStatsScene() {
   const startedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-
-  // 스크롤 락 — idle / done 이외의 모든 phase에서 활성 (자동 스크롤 도중에도 락)
-  useEffect(() => {
-    if (phase === "idle" || phase === "done") {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [phase]);
+  const lockRef = useRef<ScrollLock | null>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !startedRef.current) {
+        const e = entries[0];
+        if (e?.isIntersecting && e.intersectionRatio >= 0.85 && !startedRef.current) {
           startedRef.current = true;
           io.disconnect();
+          const node = ref.current;
+          if (node && !reduce) lockRef.current = lockScrollAt(node.offsetTop);
           runStat(0);
         }
       },
-      { threshold: 0.45 }
+      { threshold: [0.85, 1] }
     );
     io.observe(el);
 
-    // 시퀀스 완료 → 다음 씬(영상 자리)으로 자동 스크롤. 도착(스크롤 종료 감지) 후 락 해제.
+    // 시퀀스 완료 → 락 해제 + 다음 씬으로 자동 이동.
     const finish = () => {
       const node = ref.current;
       if (!node) {
+        lockRef.current?.release();
+        lockRef.current = null;
         setPhase("done");
         return;
       }
       setPhase("scrolling");
       const nextTop = node.offsetTop + node.offsetHeight;
-
-      let scrollEndTimer: number | undefined;
-      let fallbackTimer: number | undefined;
-
-      const release = () => {
-        window.clearTimeout(scrollEndTimer);
-        window.clearTimeout(fallbackTimer);
-        window.removeEventListener("scroll", onScroll);
-        setPhase("done");
-      };
-
-      const onScroll = () => {
-        window.clearTimeout(scrollEndTimer);
-        // 마지막 scroll 이벤트 후 180ms 무이벤트 → 스크롤 종료로 판단
-        scrollEndTimer = window.setTimeout(release, 180);
-      };
-
-      window.addEventListener("scroll", onScroll, { passive: true });
-      // fallback — 스크롤이 발생하지 않거나 종료 감지에 실패할 경우
-      fallbackTimer = window.setTimeout(release, 1800);
-
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: nextTop, behavior: "smooth" });
-      });
-    };
-
-    const runTeamLine = () => {
-      setPhase("team-in");
-      timerRef.current = window.setTimeout(() => {
-        setPhase("team-hold");
-        timerRef.current = window.setTimeout(() => {
-          setPhase("team-out");
-          timerRef.current = window.setTimeout(() => {
-            finish();
-          }, FADE_MS + GAP_MS);
-        }, TEAM_HOLD_MS);
-      }, FADE_MS);
+      releaseAndAdvance(lockRef.current, nextTop, () => setPhase("done"));
+      lockRef.current = null;
     };
 
     const runStat = (i: number) => {
       if (i >= stats.length) {
-        timerRef.current = window.setTimeout(runTeamLine, TEAM_IN_DELAY);
+        finish();
         return;
       }
       const stat = stats[i];
@@ -167,7 +117,8 @@ export function AutoStatsScene() {
       io.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (timerRef.current) window.clearTimeout(timerRef.current);
-      document.body.style.overflow = "";
+      lockRef.current?.release();
+      lockRef.current = null;
     };
   }, []);
 
@@ -176,7 +127,6 @@ export function AutoStatsScene() {
     phase === "in" || phase === "hold" || phase === "out";
   const isStatsVisible = phase === "in" || phase === "hold";
   const showLabel = phase === "hold";
-  const isTeamVisible = phase === "team-in" || phase === "team-hold";
 
   return (
     <section
@@ -221,19 +171,6 @@ export function AutoStatsScene() {
             </span>
           </div>
         </div>
-
-        {/* Team line — stats 시퀀스 끝나면 자동 페이드인/홀드/페이드아웃 */}
-        <p
-          className="absolute left-0 right-0 mx-auto px-4 font-sans font-semibold leading-[1.15] tracking-tight text-white"
-          style={{
-            fontSize: "clamp(1.4rem, 4.2vw, 4.4rem)",
-            opacity: isTeamVisible ? 1 : 0,
-            transform: isTeamVisible ? "translateY(0)" : "translateY(8px)",
-            transition: `opacity 600ms cubic-bezier(0.2,1,0.4,1), transform 600ms cubic-bezier(0.2,1,0.4,1)`,
-          }}
-        >
-          저희 팀은 우리가 원하는 디자인을 구현하였습니다.
-        </p>
       </div>
     </section>
   );

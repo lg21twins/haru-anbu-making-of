@@ -116,7 +116,7 @@ const palette: PillStyle[] = [
   { bg: "#ffffff", fg: "#0a0a0a" },
   { bg: "#2c7afc", fg: "#ffffff" },
   { bg: "#0f1b3a", fg: "#74a8ff", border: "rgba(116,168,255,0.4)" },
-  { bg: "#7eff8d", fg: "#0a0a0a" },
+  { bg: "#ffffff", fg: "#0a0a0a" },
   { bg: "#7c4dff", fg: "#ffffff" },
   { bg: "#10b9c4", fg: "#0a0a0a" },
   { bg: "#d946ef", fg: "#ffffff" },
@@ -124,7 +124,7 @@ const palette: PillStyle[] = [
   { bg: "#1a2447", fg: "#ffffff" },
   { bg: "#ff6b9d", fg: "#0a0a0a" },
   { bg: "#fbbf24", fg: "#0a0a0a" },
-  { bg: "transparent", fg: "#7eff8d", border: "rgba(126,255,141,0.4)" },
+  { bg: "transparent", fg: "#ffffff", border: "rgba(255,255,255,0.4)" },
 ];
 
 function hash(n: number): number {

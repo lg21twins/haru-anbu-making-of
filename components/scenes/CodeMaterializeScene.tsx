@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
 
 // v11_보호자앱/g-guardian-live.html 그대로 100% 재현.
 // 색·치수·재질 모두 v11 CSS 변수와 동일하게 매칭:
@@ -172,7 +173,7 @@ function syntaxColor(escaped: string) {
     .replace(/(\{[^}]*\})/g, "§X§$1§E§");
   s = s
     .replace(/§T§/g, '<span style="color:#ff7b9c">')
-    .replace(/§A§/g, '<span style="color:#7eff8d">')
+    .replace(/§A§/g, '<span style="color:#ffffff">')
     .replace(/§S§/g, '<span style="color:#74a8ff">')
     .replace(/§X§/g, '<span style="color:#fbbf24">')
     .replace(/§E§/g, "</span>");
@@ -263,37 +264,92 @@ function FolderIcon({ size = 24 }: { size?: number }) {
   );
 }
 
+// 자동재생 총 시간 (ms) — 들어오면 알아서 타이핑되고 다음 씬으로 넘어감
+const PLAY_MS = 7000;
+const HOLD_AFTER_MS = 700;
+
 export function CodeMaterializeScene() {
   const ref = useRef<HTMLElement>(null);
   const codeRef = useRef<HTMLPreElement>(null);
   const [chars, setChars] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "playing" | "scrolling" | "done">(
+    "idle"
+  );
+  const startedRef = useRef(false);
+  const lockRef = useRef<ScrollLock | null>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let tick = false;
-    const compute = () => {
-      const rect = el.getBoundingClientRect();
-      const range = el.offsetHeight - window.innerHeight;
-      const scrolled = Math.max(0, Math.min(range, -rect.top));
-      const p = range > 0 ? scrolled / range : 0;
-      const t = Math.max(0, Math.min(1, (p - 0.02) / 0.92));
-      setChars(Math.round(t * TOTAL));
+
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let rafId: number | null = null;
+    let holdTimer: number | null = null;
+
+    const finish = () => {
+      const node = ref.current;
+      if (!node) {
+        lockRef.current?.release();
+        lockRef.current = null;
+        setPhase("done");
+        return;
+      }
+      setPhase("scrolling");
+      const nextTop = node.offsetTop + node.offsetHeight;
+      releaseAndAdvance(lockRef.current, nextTop, () => setPhase("done"));
+      lockRef.current = null;
     };
-    const onScroll = () => {
-      if (tick) return;
-      tick = true;
-      requestAnimationFrame(() => {
-        compute();
-        tick = false;
-      });
+
+    const start = () => {
+      if (reduce) {
+        setChars(TOTAL);
+        finish();
+        return;
+      }
+      setPhase("playing");
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - t0) / PLAY_MS);
+        // ease-out cubic — 끝으로 갈수록 살짝 감속
+        const eased = 1 - Math.pow(1 - p, 2.2);
+        setChars(Math.round(eased * TOTAL));
+        if (p < 1) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          setChars(TOTAL);
+          holdTimer = window.setTimeout(finish, HOLD_AFTER_MS);
+        }
+      };
+      rafId = requestAnimationFrame(tick);
     };
-    compute();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", compute);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e?.isIntersecting && e.intersectionRatio >= 0.85 && !startedRef.current) {
+          startedRef.current = true;
+          io.disconnect();
+          const node = ref.current;
+          // 진입 즉시 섹션 top에 고정 + 락 (reduce면 락 없이 즉시 완료)
+          if (node && !reduce) {
+            lockRef.current = lockScrollAt(node.offsetTop);
+          }
+          start();
+        }
+      },
+      { threshold: [0.85, 1] }
+    );
+    io.observe(el);
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", compute);
+      io.disconnect();
+      if (rafId != null) cancelAnimationFrame(rafId);
+      if (holdTimer != null) window.clearTimeout(holdTimer);
+      lockRef.current?.release();
+      lockRef.current = null;
     };
   }, []);
 
@@ -336,8 +392,8 @@ export function CodeMaterializeScene() {
   });
 
   return (
-    <section ref={ref} className="relative w-full" style={{ height: "780vh" }}>
-      <div className="sticky top-0 flex h-screen w-full flex-col overflow-hidden bg-black">
+    <section ref={ref} className="relative w-full" style={{ height: "100vh" }}>
+      <div className="absolute inset-0 flex w-full flex-col overflow-hidden bg-black">
         {/* 1) #f8fbff 흰 캔버스 */}
         <div
           className="absolute inset-0"

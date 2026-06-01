@@ -33,7 +33,7 @@ export function PhoneFrame({ children, size = "lg", className = "", style }: Pro
           background:
             "linear-gradient(135deg, #e8ecf0 0%, #c2c7cc 28%, #8d9298 62%, #b9bec3 88%, #d6dade 100%)",
           boxShadow:
-            "0 24px 72px -18px rgba(126, 255, 141, 0.22), 0 56px 120px -14px rgba(0,0,0,0.75)",
+            "0 24px 72px -18px rgba(255, 255, 255, 0.22), 0 56px 120px -14px rgba(0,0,0,0.75)",
         }}
       />
       <div

@@ -94,7 +94,7 @@ html.lenis body {
   height: 44px;
   margin: -22px 0 0 -22px;
   border-radius: 9999px;
-  border: 1px solid rgba(126, 255, 141, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   transition:
     width 0.3s cubic-bezier(0.2, 1, 0.4, 1),
     height 0.3s cubic-bezier(0.2, 1, 0.4, 1),
@@ -109,8 +109,8 @@ html.lenis body {
   width: 70px;
   height: 70px;
   margin: -35px 0 0 -35px;
-  background: rgba(126, 255, 141, 0.05);
-  border-color: rgba(126, 255, 141, 0.55);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.55);
   opacity: 1;
 }
 
@@ -118,8 +118,8 @@ html.lenis body {
   width: 96px;
   height: 96px;
   margin: -48px 0 0 -48px;
-  border-color: rgba(126, 255, 141, 0.4);
-  background: rgba(126, 255, 141, 0.03);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.03);
   opacity: 1;
 }
 
@@ -128,7 +128,7 @@ html.lenis body {
   height: 28px;
   margin: -14px 0 0 -1px;
   border: none;
-  background: rgba(126, 255, 141, 0.85);
+  background: rgba(255, 255, 255, 0.85);
   border-radius: 2px;
   opacity: 1;
 }

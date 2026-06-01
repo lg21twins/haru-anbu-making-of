@@ -22,7 +22,7 @@ const credits: Line[] = [
   { kind: "name", text: "김지욱" },
   { kind: "name", text: "손예찬" },
   { kind: "name", text: "고해은" },
-  { kind: "name", text: "Claude" },
+  { kind: "name", text: "네잎클로버" },
   { kind: "spacer", h: 12 },
 
   { kind: "section", text: "CAST" },
@@ -391,7 +391,7 @@ function CreditLine({ line }: { line: Line }) {
           className="my-6 font-sans font-bold leading-none tracking-tight text-[color:var(--color-key)]"
           style={{
             fontSize: "clamp(2.2rem, 5.5vw, 4.6rem)",
-            filter: "drop-shadow(0 0 30px rgba(126, 255, 141, 0.5))",
+            filter: "drop-shadow(0 0 30px rgba(255, 255, 255, 0.5))",
           }}
         >
           {line.text}

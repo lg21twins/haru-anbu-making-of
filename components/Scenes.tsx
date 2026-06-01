@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { CloverLineScene } from "@/components/scenes/CloverLineScene";
 import { OpeningPromptScene } from "@/components/scenes/OpeningPromptScene";
 import { CommandScene } from "@/components/scenes/CommandScene";
 import { LineScene } from "@/components/scenes/LineScene";
@@ -10,30 +11,6 @@ import { AutoStatsScene } from "@/components/scenes/AutoStatsScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
 
-const ProblemDiscoveryScene = dynamic(() =>
-  import("@/components/scenes/ProblemDiscoveryScene").then(
-    (m) => m.ProblemDiscoveryScene
-  )
-);
-const PersonasInterlude = dynamic(() =>
-  import("@/components/scenes/PersonasInterlude").then((m) => m.PersonasInterlude)
-);
-const JtbdInterlude = dynamic(() =>
-  import("@/components/scenes/JtbdInterlude").then((m) => m.JtbdInterlude)
-);
-const MatrixInterlude = dynamic(() =>
-  import("@/components/scenes/MatrixInterlude").then((m) => m.MatrixInterlude)
-);
-const BlueOceanInterlude = dynamic(() =>
-  import("@/components/scenes/BlueOceanInterlude").then(
-    (m) => m.BlueOceanInterlude
-  )
-);
-const DesignIterationScene = dynamic(() =>
-  import("@/components/scenes/DesignIterationScene").then(
-    (m) => m.DesignIterationScene
-  )
-);
 const LogoEvolutionScene = dynamic(() =>
   import("@/components/scenes/LogoEvolutionScene").then(
     (m) => m.LogoEvolutionScene
@@ -49,14 +26,9 @@ const PromptGrammarScene = dynamic(() =>
     (m) => m.PromptGrammarScene
   )
 );
-const FailuresGalleryScene = dynamic(() =>
-  import("@/components/scenes/FailuresGalleryScene").then(
-    (m) => m.FailuresGalleryScene
-  )
-);
-const CompletedDesignsScene = dynamic(() =>
-  import("@/components/scenes/CompletedDesignsScene").then(
-    (m) => m.CompletedDesignsScene
+const ChaosToOrderScene = dynamic(() =>
+  import("@/components/scenes/ChaosToOrderScene").then(
+    (m) => m.ChaosToOrderScene
   )
 );
 const VideoScene = dynamic(
@@ -68,38 +40,25 @@ export function Scenes() {
   return (
     <main className="relative w-full bg-black text-white">
       <Suspense fallback={<div className="h-screen bg-black" />}>
-        {/* 01 — Opening */}
+        {/* 00 — 규모 폭격: 숫자 (12,236 / 612 / 228) */}
+        <div id="nav-numbers" className="block" />
+        <AutoStatsScene />
+
+        {/* 01.5 — 전환: "저희에겐 네잎클로버가 있었거든요" */}
+        <CloverLineScene />
+
+        {/* 02 — 명령 */}
         <OpeningPromptScene />
 
-        {/* === 시작 === */}
-        <div id="nav-problem" className="block" />
-        <ProblemDiscoveryScene />
-
-        {/* === 리서치 === */}
-        <div id="nav-research" className="block" />
-        <CommandScene id="s-cmd-who" text="누구를 위해 만들지부터 정해." />
-        <PersonasInterlude />
-
-        <CommandScene
-          id="s-cmd-jtbd"
-          text="그들이 진짜 원하는 게 뭔지 찾아내."
-        />
-        <JtbdInterlude />
-
-        <CommandScene
-          id="s-cmd-market"
-          text="시장에서 우리만 할 수 있는 게 뭔지도."
-        />
-        <MatrixInterlude />
-        <BlueOceanInterlude />
-
-        {/* === 브랜드 === */}
+        {/* === 증거 묶음: 브랜드 (메시지/로고 채팅) === */}
         <div id="nav-brand" className="block" />
         <LogoEvolutionScene />
 
-        {/* === 디자인 === */}
-        <div id="nav-design" className="block" />
-        <DesignIterationScene />
+        {/* === 그 뒤로 이어짐: 폴더가 시안을 쏟아냄 → 살아남은 하나 === */}
+        <div id="nav-process" className="block" />
+        <ChaosToOrderScene />
+
+        {/* === 어떻게: 명령이 화면이 되는 순간 (정체성, 클라이맥스) === */}
         <CodeMaterializeScene />
 
         {/* === 영상 === */}
@@ -150,23 +109,15 @@ export function Scenes() {
           hero
         />
 
-        {/* === 방법 === */}
+        {/* === 회고/방법: 근데 자주 틀렸다 → 우리가 자주 보낸 말들 === */}
         <div id="nav-method" className="block" />
-        <PromptGrammarScene />
-
-        {/* === 회고: 자주 틀렸다 → 실패 갤러리 → 숫자 → 완성 === */}
         <LineScene
           id="s-wrong"
           text="근데 자주 틀렸다."
           size="huge"
           color="text-[color:var(--color-key)]"
         />
-        <FailuresGalleryScene />
-
-        {/* === 결산 === */}
-        <div id="nav-numbers" className="block" />
-        <AutoStatsScene />
-        <CompletedDesignsScene />
+        <PromptGrammarScene />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         <FinalScene />

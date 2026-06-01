@@ -237,7 +237,7 @@ export function DesignIterationScene() {
                   className="whitespace-nowrap font-sans font-bold text-[color:var(--color-key)]"
                   style={{
                     fontSize: "clamp(3.5rem, 11vw, 11rem)",
-                    filter: "drop-shadow(0 0 40px rgba(126,255,141,0.55))",
+                    filter: "drop-shadow(0 0 40px rgba(255,255,255,0.55))",
                   }}
                 >
                   이거야!
@@ -310,10 +310,10 @@ function Progress({ p }: { p: number }) {
               i === idx
                 ? "var(--color-key)"
                 : i < idx
-                  ? "rgba(126,255,141,0.45)"
+                  ? "rgba(255,255,255,0.45)"
                   : "rgba(255,255,255,0.18)",
             boxShadow:
-              i === idx ? "0 0 10px rgba(126,255,141,0.6)" : "none",
+              i === idx ? "0 0 10px rgba(255,255,255,0.6)" : "none",
           }}
         />
       ))}

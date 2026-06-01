@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 
 const items = [
-  { href: "#nav-problem", label: "Origin" },
-  { href: "#nav-research", label: "Research" },
   { href: "#nav-brand", label: "Brand" },
-  { href: "#nav-design", label: "Iteration" },
+  { href: "#nav-process", label: "Build" },
   { href: "#nav-video", label: "Film" },
   { href: "#nav-method", label: "Method" },
   { href: "#nav-numbers", label: "Numbers" },
