@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
+import { StartGate } from "@/components/StartGate";
 import { CloverLineScene } from "@/components/scenes/CloverLineScene";
 import { OpeningPromptScene } from "@/components/scenes/OpeningPromptScene";
 import { CommandScene } from "@/components/scenes/CommandScene";
@@ -39,6 +40,8 @@ const VideoScene = dynamic(
 export function Scenes() {
   return (
     <main className="relative w-full bg-black text-white">
+      {/* 시작 게이트 — 스페이스바(또는 클릭)로 숫자 폭격부터 시작 */}
+      <StartGate />
       <Suspense fallback={<div className="h-screen bg-black" />}>
         {/* 00 — 규모 폭격: 숫자 (12,236 / 612 / 228) */}
         <div id="nav-numbers" className="block" />

@@ -48,15 +48,21 @@ export function AutoStatsScene() {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // 시작 게이트(스페이스바)가 열려야 카운트업 시작
+    const begin = () => {
+      const node = ref.current;
+      if (node && !reduce) lockRef.current = lockScrollAt(node.offsetTop);
+      runStat(0);
+    };
+
     const io = new IntersectionObserver(
       (entries) => {
         const e = entries[0];
         if (e?.isIntersecting && e.intersectionRatio >= 0.85 && !startedRef.current) {
           startedRef.current = true;
           io.disconnect();
-          const node = ref.current;
-          if (node && !reduce) lockRef.current = lockScrollAt(node.offsetTop);
-          runStat(0);
+          if ((window as { __haruStarted?: boolean }).__haruStarted) begin();
+          else window.addEventListener("haru:start", begin, { once: true });
         }
       },
       { threshold: [0.85, 1] }
@@ -115,6 +121,7 @@ export function AutoStatsScene() {
 
     return () => {
       io.disconnect();
+      window.removeEventListener("haru:start", begin);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (timerRef.current) window.clearTimeout(timerRef.current);
       lockRef.current?.release();
