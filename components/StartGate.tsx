@@ -48,7 +48,7 @@ export function StartGate() {
     <div
       onClick={start}
       aria-hidden
-      className="fixed inset-0 z-[200] bg-black"
+      className="fixed inset-0 z-[300] bg-black"
       style={{
         opacity: phase === "wait" ? 1 : 0,
         transition: "opacity 650ms ease",
