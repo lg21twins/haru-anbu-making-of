@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
+import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
 const fullText = `자 넌 이제부터
 우리의 프로젝트 "하루안부"를 담당할
@@ -19,8 +20,8 @@ UX 리서처이자
 카피라이터이자
 프롬프트 엔지니어야.`;
 
-// 자동 타이핑 — 들어오면 락 걸리고, 다 쳐질 때까지 스크롤 막힌 뒤 다음 씬으로.
-const PLAY_MS = 5200;
+// 자동 타이핑 — 들어오면 락 걸리고, 다 쳐진 뒤 스페이스바를 누르면 다음 씬으로.
+const PLAY_MS = 6800; // 좀만 느리게
 const HOLD_AFTER_MS = 1000;
 const MIN_CLICK_GAP_MS = 38;
 
@@ -124,6 +125,7 @@ export function OpeningPromptScene() {
 
     let rafId: number | null = null;
     let holdTimer: number | null = null;
+    let gate: SpaceGate | null = null;
 
     const finish = () => {
       const node = sectionRef.current;
@@ -156,7 +158,11 @@ export function OpeningPromptScene() {
           rafId = requestAnimationFrame(tick);
         } else {
           setChars(fullText.length);
-          holdTimer = window.setTimeout(finish, HOLD_AFTER_MS);
+          // 다 쳐진 뒤 한 박자 → 자동 진행하지 않고 스페이스바를 기다림.
+          holdTimer = window.setTimeout(() => {
+            gate = waitForSpace();
+            gate.promise.then(finish);
+          }, HOLD_AFTER_MS);
         }
       };
       rafId = requestAnimationFrame(tick);
@@ -181,6 +187,7 @@ export function OpeningPromptScene() {
       io.disconnect();
       if (rafId != null) cancelAnimationFrame(rafId);
       if (holdTimer != null) window.clearTimeout(holdTimer);
+      gate?.cancel();
       lockRef.current?.release();
       lockRef.current = null;
       window.removeEventListener("pointerdown", unlockAudio);

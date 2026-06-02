@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getLenis, lockScrollAt, ScrollLock } from "@/lib/scrollLock";
+import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
 type Phase = "idle" | "chaos" | "grid" | "shortlist" | "whiteout" | "done";
 
@@ -82,6 +83,12 @@ export function ChaosToOrderScene() {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: number[] = [];
+    let cancelled = false;
+    let gate: SpaceGate | null = null;
+    const sleep = (ms: number) =>
+      new Promise<void>((res) => {
+        timers.push(window.setTimeout(res, ms));
+      });
 
     // 흰 화면이 다 덮인 뒤 → 락 풀고 다음 씬(CodeMaterialize)으로 이동, 오버레이 페이드
     const handoff = () => {
@@ -100,7 +107,28 @@ export function ChaosToOrderScene() {
       );
     };
 
-    const run = () => {
+    // 스페이스바로 단계 통제: 시안(228) → [SPACE] 정리해라 → [SPACE] 살아남은 하나 → [SPACE] 코딩 페이지
+    const runGated = async () => {
+      setPhase("chaos");
+      gate = waitForSpace();
+      await gate.promise;
+      if (cancelled) return;
+      setPhase("grid");
+      gate = waitForSpace();
+      await gate.promise;
+      if (cancelled) return;
+      setPhase("shortlist");
+      gate = waitForSpace();
+      await gate.promise;
+      if (cancelled) return;
+      setPhase("whiteout");
+      await sleep(T.whiteGrow); // 흰 와이프가 화면을 덮는 동안
+      if (cancelled) return;
+      handoff();
+    };
+
+    // reduced-motion: 원래 자동 타이밍대로
+    const runAuto = () => {
       setPhase("chaos");
       let t = T.chaos;
       timers.push(window.setTimeout(() => setPhase("grid"), t));
@@ -120,7 +148,8 @@ export function ChaosToOrderScene() {
           io.disconnect();
           const node = ref.current;
           if (node && !reduce) lockRef.current = lockScrollAt(node.offsetTop);
-          run();
+          if (reduce) runAuto();
+          else runGated();
         }
       },
       { threshold: [0.85, 1] }
@@ -128,7 +157,9 @@ export function ChaosToOrderScene() {
     io.observe(el);
 
     return () => {
+      cancelled = true;
       io.disconnect();
+      gate?.cancel();
       timers.forEach((id) => window.clearTimeout(id));
       lockRef.current?.release();
       lockRef.current = null;

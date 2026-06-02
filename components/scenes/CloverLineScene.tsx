@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
+import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
-// 진입 → 락 → 1줄(비유) 떠오름 → 한 박자 뒤 2줄(정체=AI) 공개 → 잠시 머문 뒤 다음 씬으로.
+// 진입 → 락 → 1줄(비유) 떠오름 → 한 박자 뒤 2줄(정체=AI) 공개 → 스페이스바를 누르면 다음 씬으로.
 const IN_MS = 600; // line1 등장
 const LINE1_HOLD = 1150; // line1 단독 유지
 const REVEAL_MS = 600; // line2 등장
-const BOTH_HOLD = 1900; // 둘 다 유지
+const BOTH_HOLD = 1900; // 둘 다 유지 (reduced-motion 전용)
 const OUT_MS = 600;
 
 type Phase = "idle" | "line1" | "line2" | "out" | "done";
@@ -24,6 +25,7 @@ export function CloverLineScene() {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: number[] = [];
+    let gate: SpaceGate | null = null;
 
     const finish = () => {
       const node = ref.current;
@@ -48,11 +50,15 @@ export function CloverLineScene() {
       timers.push(
         window.setTimeout(() => {
           setPhase("line2");
+          // line2(=AI 팀원)가 다 떠오른 뒤, 자동 진행하지 않고 스페이스바를 기다림.
           timers.push(
             window.setTimeout(() => {
-              setPhase("out");
-              timers.push(window.setTimeout(finish, OUT_MS));
-            }, REVEAL_MS + BOTH_HOLD)
+              gate = waitForSpace();
+              gate.promise.then(() => {
+                setPhase("out");
+                timers.push(window.setTimeout(finish, OUT_MS));
+              });
+            }, REVEAL_MS)
           );
         }, IN_MS + LINE1_HOLD)
       );
@@ -76,6 +82,7 @@ export function CloverLineScene() {
     return () => {
       io.disconnect();
       timers.forEach((id) => window.clearTimeout(id));
+      gate?.cancel();
       lockRef.current?.release();
       lockRef.current = null;
     };

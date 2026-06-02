@@ -2,16 +2,18 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
+import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
-// 타이핑 속도(글자/초) — "빠르게"
-const ME_CPS = 42;
-const AI_CPS = 66;
-const INDICATOR_MS = 420; // AI 응답 전 점점점
-const AFTER_SEND_MS = 240; // 내 메시지 전송 후 텀
-const AFTER_AI_MS = 320; // AI 메시지 후 텀
-const IMG_REVEAL_MS = 460; // 로고 시안 등장 후 텀
-const PRE_CLIMAX_MS = 650; // 대화 끝나고 피날레 전 텀
-const CLIMAX_MS = 3400; // 카드 아웃 → 로고 폴더 안착 → 비행
+// 타이핑 속도(글자/초) — 로고 얘기하는 대화 부분만 "1.5배 천천히"
+const ME_CPS = 28;
+const AI_CPS = 44;
+const INDICATOR_MS = 630; // AI 응답 전 점점점
+const AFTER_SEND_MS = 360; // 내 메시지 전송 후 텀
+const AFTER_AI_MS = 480; // AI 메시지 후 텀
+const IMG_REVEAL_MS = 690; // 로고 시안 등장 후 텀
+const AFTER_ME_TYPE_MS = 225; // 내 메시지 다 친 뒤 전송까지 텀
+const BEFORE_IMG_MS = 240; // AI 답변 후 시안 띄우기 전 텀
+const CLIMAX_MS = 3400; // 카드 아웃 → 로고 폴더 안착 → 비행 (피날레는 그대로)
 
 const ORB_BG = "linear-gradient(135deg, #2C7AFC, #1D6AF2)";
 
@@ -292,6 +294,7 @@ export function LogoEvolutionScene() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let cancelled = false;
     let rafId: number | null = null;
+    let gate: SpaceGate | null = null;
     const timers = new Set<number>();
 
     const sleep = (ms: number) =>
@@ -382,7 +385,7 @@ export function LogoEvolutionScene() {
         if (m.role === "me") {
           setComposing("");
           await typeString(m.text, ME_CPS, (s) => setComposing(s));
-          await sleep(150);
+          await sleep(AFTER_ME_TYPE_MS);
           if (cancelled) return;
           setComposing(null);
           setRevealed(i + 1);
@@ -396,7 +399,7 @@ export function LogoEvolutionScene() {
             setAi((a) => (a ? { ...a, typed: n } : a))
           );
           if (m.attempt) {
-            await sleep(160);
+            await sleep(BEFORE_IMG_MS);
             if (cancelled) return;
             setAi((a) => (a ? { ...a, image: true } : a));
             await sleep(IMG_REVEAL_MS);
@@ -408,9 +411,15 @@ export function LogoEvolutionScene() {
         }
       }
       if (cancelled) return;
-      await sleep(PRE_CLIMAX_MS);
+      // 대화가 끝나면 자동으로 "이거다." 피날레로 넘어가지 않고 스페이스바를 기다림.
+      gate = waitForSpace();
+      await gate.promise;
       if (cancelled) return;
       await runClimax();
+      if (cancelled) return;
+      // 피날레(로고가 코너로 날아간 뒤)에서도 자동으로 카오스로 넘어가지 않고 스페이스바를 기다림.
+      gate = waitForSpace();
+      await gate.promise;
       if (cancelled) return;
       finish();
     };
@@ -440,6 +449,7 @@ export function LogoEvolutionScene() {
       cancelled = true;
       io.disconnect();
       if (rafId != null) cancelAnimationFrame(rafId);
+      gate?.cancel();
       timers.forEach((id) => window.clearTimeout(id));
       lockRef.current?.release();
       lockRef.current = null;

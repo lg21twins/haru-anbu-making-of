@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
+import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
 // v11_보호자앱/g-guardian-live.html 그대로 100% 재현.
 // 색·치수·재질 모두 v11 CSS 변수와 동일하게 매칭:
@@ -288,6 +289,7 @@ export function CodeMaterializeScene() {
 
     let rafId: number | null = null;
     let holdTimer: number | null = null;
+    let gate: SpaceGate | null = null;
 
     const finish = () => {
       const node = ref.current;
@@ -320,7 +322,11 @@ export function CodeMaterializeScene() {
           rafId = requestAnimationFrame(tick);
         } else {
           setChars(TOTAL);
-          holdTimer = window.setTimeout(finish, HOLD_AFTER_MS);
+          // 코드가 다 쳐진 뒤 한 박자 → 자동 진행하지 않고 스페이스바를 기다림.
+          holdTimer = window.setTimeout(() => {
+            gate = waitForSpace();
+            gate.promise.then(finish);
+          }, HOLD_AFTER_MS);
         }
       };
       rafId = requestAnimationFrame(tick);
@@ -348,6 +354,7 @@ export function CodeMaterializeScene() {
       io.disconnect();
       if (rafId != null) cancelAnimationFrame(rafId);
       if (holdTimer != null) window.clearTimeout(holdTimer);
+      gate?.cancel();
       lockRef.current?.release();
       lockRef.current = null;
     };
