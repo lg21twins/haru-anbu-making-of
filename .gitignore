@@ -44,5 +44,5 @@ next-env.d.ts
 content/log.generated.json
 content/log.search-index.json
 
-# heavy media — regenerate via scripts/transcode-videos.sh
-public/media/video/*.mp4
+# NOTE: 영상(public/media/video/*.mp4)은 팀원이 클론만 해도 바로 돌아가도록
+# 일부러 저장소에 포함시킴. 용량이 작아(전체 ~4MB) LFS 불필요.
