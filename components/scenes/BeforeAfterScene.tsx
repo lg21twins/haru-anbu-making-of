@@ -12,7 +12,7 @@ export function BeforeAfterScene({ id, gate }: { id?: string; gate?: boolean }) 
   const beforeRef = useRef<HTMLVideoElement>(null);
   const afterRef = useRef<HTMLVideoElement>(null);
   const draggingRef = useRef(false);
-  const [pos, setPos] = useState(50); // 디바이더 위치 (%)
+  const [pos, setPos] = useState(78); // 디바이더 위치 (%) — 디폴트로 초기 버전(좌측)이 더 많이 보이게 우측에 둠
   const [active, setActive] = useState(false);
 
   // 저속 회선이면 480p

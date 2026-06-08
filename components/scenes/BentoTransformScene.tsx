@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lockScrollAt, releaseAndAdvance, ScrollLock } from "@/lib/scrollLock";
 
-// 비포→애프터 변신 릴 — 스페이스바 스텝 + 박스가 "그 자리에서 전체화면으로 넓어짐"(FLIP 모핑).
+// 비포→애프터 변신 릴 — 엔터 스텝 + 박스가 "그 자리에서 전체화면으로 넓어짐"(FLIP 모핑).
 //  · 쉬는 상태: 박스는 그냥 하얗게
-//  · 스페이스 → 박스가 전체화면으로 넓어지고, 1막(무드보드) "비포"가 먼저 뜸
-//  · 스페이스 → 1막 비포→애프터 조립
-//  · 스페이스 → 1막이 자연스럽게 페이드 아웃되고 2막(리포트) "비포"가 뜸 (슬라이드 X, 크로스페이드)
-//  · 스페이스 → 2막 비포→애프터 조립 → 끝나면 자동으로 박스로 다시 좁아짐(rest, 2막 애프터 유지)
-//  · rest에서 스페이스 → gate면 다음 섹션(영상)으로 이동, 아니면 처음부터 다시 재생
+//  · 엔터 → 박스가 전체화면으로 넓어지고, 1막(무드보드) "비포"가 먼저 뜸
+//  · 엔터 → 1막 비포→애프터 조립
+//  · 엔터 → 1막이 자연스럽게 페이드 아웃되고 2막(리포트) "비포"가 뜸 (슬라이드 X, 크로스페이드)
+//  · 엔터 → 2막 비포→애프터 조립 (전체화면 그대로 유지 — 자동 축소 없음)
+//  · 엔터 → gate면 다음 섹션(영상)으로 이동
+//  · (Esc로 수동 축소 가능 — closing→rest)
 // 두 릴 모두 auto=0 → 'play' 메시지 전까지 비포에서 대기. transform 기반 모핑이라 iframe 리로드 없음.
 
-const A1 = "/transform/bento-transform.html?v=6&auto=0"; // 비포 대기 → 스페이스로 재생
-const A2 = "/transform/bento-transform-2.html?v=8&auto=0"; // 비포 대기 → 스페이스로 재생
+const A1 = "/transform/bento-transform.html?v=6&auto=0"; // 비포 대기 → 엔터로 재생
+const A2 = "/transform/bento-transform-2.html?v=8&auto=0"; // 비포 대기 → 엔터로 재생
 // 아래 영상(비포/애프터·TTS) 박스와 같은 크기 규칙 — 한 줄 제목 아래로 들어감
 const BOXW = "min(96vw, calc((82vh - 96px) * 16 / 9))";
 
@@ -72,7 +73,16 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
     v.style.boxShadow = "none";
   };
 
-  // 전체화면 → 박스로 다시 좁힘
+  // 전체화면 모핑 스타일 즉시 제거 → morphRef가 슬롯 박스로 복귀(absolute inset-0)
+  const resetMorphStyles = useCallback(() => {
+    const v = morphRef.current;
+    if (!v) return;
+    ["transition", "position", "top", "left", "width", "height", "zIndex", "transformOrigin", "transform", "borderRadius", "borderColor", "boxShadow", "opacity"].forEach(
+      (k) => v.style.removeProperty(k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()))
+    );
+  }, []);
+
+  // 전체화면 → 박스로 다시 좁힘 (Esc 수동 축소용)
   const closeMorph = useCallback(() => {
     const slot = slotRef.current;
     const v = morphRef.current;
@@ -82,22 +92,17 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
     const vh = window.innerHeight;
     v.style.transition = "transform .5s cubic-bezier(.22,.9,.25,1)";
     v.style.transform = rectTransform(r, vw, vh);
-    const reset = () => {
-      ["transition", "position", "top", "left", "width", "height", "zIndex", "transformOrigin", "transform", "borderRadius", "borderColor", "boxShadow"].forEach(
-        (k) => v.style.removeProperty(k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()))
-      );
-    };
     const onEnd = (e: TransitionEvent) => {
       if (e.target !== v) return;
       v.removeEventListener("transitionend", onEnd);
-      reset();
+      resetMorphStyles();
     };
     v.addEventListener("transitionend", onEnd);
     window.setTimeout(() => {
       v.removeEventListener("transitionend", onEnd);
-      reset();
+      resetMorphStyles();
     }, 640);
-  }, []);
+  }, [resetMorphStyles]);
 
   const close = useCallback(() => {
     if (closeTimerRef.current) {
@@ -129,7 +134,7 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
     return () => io.disconnect();
   }, []);
 
-  // 스페이스바 스텝 진행
+  // 엔터 스텝 진행
   useEffect(() => {
     if (!armed) return;
     const onKey = (e: KeyboardEvent) => {
@@ -140,7 +145,7 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
         }
         return;
       }
-      if (e.code !== "Space" && e.key !== " ") return;
+      if (e.code !== "Enter" && e.code !== "NumpadEnter" && e.key !== "Enter") return;
       e.preventDefault();
       if (busyRef.current) return;
       busyRef.current = true;
@@ -148,10 +153,17 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
         busyRef.current = false;
       }, 650);
 
-      if (phase === "rest" && gate) {
-        // 발표 게이트 — 다 보여줬으면 다음 섹션(영상)으로 이동
+      if ((phase === "a2" || phase === "rest") && gate) {
+        // 발표 게이트 — 2막 조립 다 보여준 전체화면 상태에서 엔터 → 다음 섹션(영상)으로 이동
         if (advancingRef.current) return;
         advancingRef.current = true;
+        // 전체화면(a2)이면 박스로 줄이지 않고(축소 없음) 그대로 페이드아웃하며 영상으로 컷 전환
+        const v = morphRef.current;
+        if (v && v.style.position === "fixed") {
+          v.style.transition = "opacity .5s ease";
+          v.style.opacity = "0";
+          window.setTimeout(() => resetMorphStyles(), 520);
+        }
         const node = sectionRef.current;
         const nextTop = node ? node.offsetTop + node.offsetHeight : null;
         if (nextTop != null) {
@@ -178,15 +190,14 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
         // 1막 페이드 아웃 → 2막 "비포" 크로스페이드
         setPhase("a2b");
       } else if (phase === "a2b") {
-        // 2막 조립(즉시) → 끝나면 자동으로 좁아짐
+        // 2막 조립 — 전체화면 그대로 유지(자동 축소 없음). 엔터 누르면 영상 섹션으로.
         setPhase("a2");
         post(a2Ref, "play");
-        closeTimerRef.current = window.setTimeout(() => close(), 7000);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [armed, phase, close, gate]);
+  }, [armed, phase, close, gate, resetMorphStyles]);
 
   // 언마운트 안전 해제
   useEffect(
@@ -212,8 +223,8 @@ export function BentoTransformScene({ id, gate }: { id?: string; gate?: boolean 
       <div className="flex w-full flex-col items-center">
         {/* 아래 '목소리도 프로페셔널하게.' 타이틀과 같은 결 — 한 줄로 화면 폭에 맞게 */}
         <h3 className="mb-[7vh] whitespace-nowrap text-center font-sans text-[length:var(--text-section-title)] font-extrabold tracking-tight text-white md:mb-[9vh]">
-          AI가 뱉은 무드보드를,{" "}
-          <span className="text-[var(--color-accent-green)]">하루안부로 조립하다</span>
+          AI가 뱉은 디자인을,{" "}
+          <span className="text-[var(--color-accent-green)]">우리가 조립하다</span>
         </h3>
 
         {/* 박스 슬롯 — 레이아웃 공간 예약 (모핑 중에도 자리 유지) */}

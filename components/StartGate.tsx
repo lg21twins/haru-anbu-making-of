@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lockScrollAt, ScrollLock } from "@/lib/scrollLock";
 
-// 로드 직후 자동 시작하지 않고 대기 → 스페이스바(또는 클릭)로 숫자 폭격부터 시작.
+// 로드 직후 자동 시작하지 않고 대기 → 엔터(또는 클릭)로 숫자 폭격부터 시작.
 type Phase = "wait" | "go" | "gone";
 
 export function StartGate() {
@@ -27,7 +27,7 @@ export function StartGate() {
     // 시작 전 스크롤/자동재생 잠금
     lockRef.current = lockScrollAt(0);
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.key === " ") {
+      if (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") {
         e.preventDefault();
         start();
       }
@@ -43,7 +43,7 @@ export function StartGate() {
 
   if (phase === "gone") return null;
 
-  // 발표용 — 아무 표시 없는 검은 화면. 스페이스바(또는 클릭)로 시작.
+  // 발표용 — 아무 표시 없는 검은 화면. 엔터(또는 클릭)로 시작.
   return (
     <div
       onClick={start}
