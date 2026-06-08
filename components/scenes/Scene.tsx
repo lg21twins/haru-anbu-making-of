@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, RefObject } from "react";
 
 type SceneProps = {
   children: ReactNode;
@@ -9,6 +9,7 @@ type SceneProps = {
   bg?: string;
   className?: string;
   align?: "center" | "start" | "end";
+  innerRef?: RefObject<HTMLElement | null>;
 };
 
 const heightMap = {
@@ -31,10 +32,12 @@ export function Scene({
   bg = "bg-black",
   className = "",
   align = "center",
+  innerRef,
 }: SceneProps) {
   return (
     <section
       id={id}
+      ref={innerRef}
       className={`relative flex w-full ${heightMap[height]} ${alignMap[align]} ${bg} ${className}`}
     >
       {children}

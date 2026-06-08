@@ -153,7 +153,7 @@ const CURSORS: CursorDef[] = [
   { name: "김지욱", color: "#2C7AFC", top: "17%", left: "14%", anim: "d1", dur: "8s", delay: "0s" },
   { name: "손예찬", color: "#8B5CF6", top: "13%", left: "79%", anim: "d2", dur: "9.5s", delay: ".5s" },
   { name: "고해은", color: "#FF4D8D", top: "70%", left: "11%", anim: "d3", dur: "8.5s", delay: "1s" },
-  { name: "네잎클로버", color: "#34C759", top: "66%", left: "83%", anim: "d1", dur: "10s", delay: "1.4s" },
+  { name: "네잎클로버", color: "#00CB49", top: "66%", left: "83%", anim: "d1", dur: "10s", delay: "1.4s" },
 ];
 
 function Cursor({ c }: { c: CursorDef }) {

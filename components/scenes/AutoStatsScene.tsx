@@ -161,7 +161,12 @@ export function AutoStatsScene() {
               transition: `opacity ${FADE_MS}ms cubic-bezier(0.2,1,0.4,1), transform ${FADE_MS}ms cubic-bezier(0.2,1,0.4,1)`,
             }}
           >
-            <span className="font-sans font-semibold leading-none tracking-tight text-white tabular-nums">
+            <span
+              className={`font-sans font-semibold leading-none tracking-tight text-[var(--color-accent-green)] tabular-nums${
+                phase === "in" || phase === "hold" ? " accent-glow" : ""
+              }`}
+              style={{ animationDuration: "1840ms" }}
+            >
               {current.format ? current.format(value) : value}
             </span>
             <span

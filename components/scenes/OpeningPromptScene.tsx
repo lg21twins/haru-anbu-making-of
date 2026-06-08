@@ -18,7 +18,28 @@ UX 리서처이자
 시나리오 작가이자
 영상 제작자이자
 카피라이터이자
-프롬프트 엔지니어야.`;
+발표자야.`;
+
+// 초록으로 강조할 역할 명사 (접미사 '이자'/'야'는 흰색 유지)
+const GREEN_ROLES = ["기획자", "디자이너", "프론트엔드 개발자", "영상 제작자", "발표자"];
+
+type Tok = { t: string; g: boolean };
+// 줄 단위로 쪼개 역할 명사는 초록 토큰으로 분리 (join(t) === fullText 보장)
+const TOKENS: Tok[] = (() => {
+  const lines = fullText.split("\n");
+  const toks: Tok[] = [];
+  lines.forEach((line, i) => {
+    const nl = i < lines.length - 1 ? "\n" : "";
+    const role = GREEN_ROLES.find((r) => line.startsWith(r));
+    if (role) {
+      toks.push({ t: role, g: true });
+      toks.push({ t: line.slice(role.length) + nl, g: false });
+    } else {
+      toks.push({ t: line + nl, g: false });
+    }
+  });
+  return toks;
+})();
 
 // 자동 타이핑 — 들어오면 락 걸리고, 다 쳐진 뒤 스페이스바를 누르면 다음 씬으로.
 const PLAY_MS = 6800; // 좀만 느리게
@@ -205,9 +226,34 @@ export function OpeningPromptScene() {
         <div className="w-full px-6 md:px-16">
           <h1
             className="font-sans font-semibold tracking-tight text-white whitespace-pre-line"
-            style={{ fontSize: "clamp(1.5rem, 3.2vw, 2.7rem)", lineHeight: 1.2 }}
+            style={{ fontSize: "var(--text-section-title)", lineHeight: 1.2 }}
           >
-            {fullText.slice(0, chars)}
+            {(() => {
+              const nodes: React.ReactNode[] = [];
+              let offset = 0;
+              for (let i = 0; i < TOKENS.length; i++) {
+                const tok = TOKENS[i];
+                const start = offset;
+                const end = offset + tok.t.length;
+                offset = end;
+                if (chars <= start) break;
+                const text = tok.t.slice(0, Math.min(tok.t.length, chars - start));
+                if (tok.g) {
+                  const done = chars >= end;
+                  nodes.push(
+                    <span
+                      key={i}
+                      className={`text-[var(--color-accent-green)]${done ? " accent-pop" : ""}`}
+                    >
+                      {text}
+                    </span>
+                  );
+                } else {
+                  nodes.push(<span key={i}>{text}</span>);
+                }
+              }
+              return nodes;
+            })()}
             <span className="caret" aria-hidden />
           </h1>
         </div>

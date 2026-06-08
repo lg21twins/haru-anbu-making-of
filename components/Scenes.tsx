@@ -6,8 +6,8 @@ import { Suspense } from "react";
 import { StartGate } from "@/components/StartGate";
 import { CloverLineScene } from "@/components/scenes/CloverLineScene";
 import { OpeningPromptScene } from "@/components/scenes/OpeningPromptScene";
+import { TeammateLineScene } from "@/components/scenes/TeammateLineScene";
 import { CommandScene } from "@/components/scenes/CommandScene";
-import { LineScene } from "@/components/scenes/LineScene";
 import { AutoStatsScene } from "@/components/scenes/AutoStatsScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
@@ -32,8 +32,23 @@ const ChaosToOrderScene = dynamic(() =>
     (m) => m.ChaosToOrderScene
   )
 );
-const VideoScene = dynamic(
-  () => import("@/components/scenes/VideoScene").then((m) => m.VideoScene),
+const BeforeAfterScene = dynamic(
+  () =>
+    import("@/components/scenes/BeforeAfterScene").then(
+      (m) => m.BeforeAfterScene
+    ),
+  { ssr: false }
+);
+const TtsCompareScene = dynamic(
+  () =>
+    import("@/components/scenes/TtsCompareScene").then((m) => m.TtsCompareScene),
+  { ssr: false }
+);
+const BentoTransformScene = dynamic(
+  () =>
+    import("@/components/scenes/BentoTransformScene").then(
+      (m) => m.BentoTransformScene
+    ),
   { ssr: false }
 );
 
@@ -53,6 +68,9 @@ export function Scenes() {
         {/* 02 — 명령 */}
         <OpeningPromptScene />
 
+        {/* 02.5 — 전환: "그러나 우리는 AI를 수동적으로 이용하지 않았다 / 한 명의 팀원으로서…" */}
+        <TeammateLineScene />
+
         {/* === 증거 묶음: 브랜드 (메시지/로고 채팅) === */}
         <div id="nav-brand" className="block" />
         <LogoEvolutionScene />
@@ -64,66 +82,36 @@ export function Scenes() {
         {/* === 어떻게: 명령이 화면이 되는 순간 (정체성, 클라이맥스) === */}
         <CodeMaterializeScene />
 
+        {/* 비포→애프터 변신 릴 — AI 슬롭이 해체되고 하루안부 애프터가 조립됨 (영상 섹션 바로 위) */}
+        {/* gate: 다 보여준 뒤 스페이스 → 영상 섹션으로 이동 */}
+        <BentoTransformScene id="s-bento-transform" gate />
+
         {/* === 영상 === */}
         <div id="nav-video" className="block" />
+        {/* 스페이스 → "한 줄로 시작해, 수없이 고쳤다."(비포/애프터)로 이동 */}
         <CommandScene
           id="s-cmd-video"
           text="영상까지 가자."
-          size="huge"
+          fontSize="var(--text-section-title)"
+          gate
         />
 
-        <VideoScene
-          id="s-iter1"
-          src="/media/video/iter1.mp4"
-          src480="/media/video/iter1-480.mp4"
-          poster="/media/poster/iter1.jpg"
-          caption="‘Korean hospital, doctor running.' 한 줄로 만든 첫 결과. 미국식 인테리어가 나왔다."
-        />
+        {/* 비포/애프터 — 가운데를 드래그: 좌 초기 버전 / 우 수많은 수정을 거친 최종본 */}
+        {/* 스페이스 → TTS(목소리) 섹션으로 이동 */}
+        <BeforeAfterScene id="s-before-after" gate />
 
-        <LineScene id="s-retry-iter2" text="다시." size="huge" />
-        <VideoScene
-          id="s-iter2"
-          src="/media/video/iter2.mp4"
-          src480="/media/video/iter2-480.mp4"
-          poster="/media/poster/iter2.jpg"
-          caption="‘301호 302호, 형광등, 백색 핸드레일.' 한국 디테일을 박자 분위기가 살았다."
-        />
+        {/* TTS 비포/애프터 — 영상 아래, 음성만 비교 (검정 배경 통일) */}
+        {/* 스페이스: 기존 음성 → 개선된 음성 → 다음 섹션 */}
+        <TtsCompareScene id="s-tts-compare" gate />
 
-        <LineScene id="s-retry-iter3" text="다시." size="huge" />
-        <VideoScene
-          id="s-iter3"
-          src="/media/video/iter3.mp4"
-          src480="/media/video/iter3-480.mp4"
-          poster="/media/poster/iter3.jpg"
-          caption="@김미영 같은 AI 인플루언서 핸들로 캐스팅 고정. 컷 사이 인물 일치."
-        />
-
-        <CommandScene
-          id="s-cmd-stop"
-          text="4차에서 멈췄다."
-          size="huge"
-        />
-        <VideoScene
-          id="s-iter4"
-          src="/media/video/iter4.mp4"
-          src480="/media/video/iter4-480.mp4"
-          poster="/media/poster/iter4.jpg"
-          caption="렌즈/조명/카메라 워크까지. ‘talking animatedly'로 립싱크만 유도. 한국어 더빙은 후처리."
-          hero
-        />
-
-        {/* === 회고/방법: 근데 자주 틀렸다 → 우리가 자주 보낸 말들 === */}
+        {/* === 회고/방법: 우리가 자주 보낸 말들 === */}
         <div id="nav-method" className="block" />
-        <LineScene
-          id="s-wrong"
-          text="근데 자주 틀렸다."
-          size="huge"
-          color="text-[color:var(--color-key)]"
-        />
-        <PromptGrammarScene />
+        {/* 스페이스 → "하루안부." 타이틀 카드로 이동 */}
+        <PromptGrammarScene gate />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
-        <FinalScene />
+        {/* 스페이스 → 엔딩 크레딧으로 이동 */}
+        <FinalScene gate />
         <CreditsScene />
       </Suspense>
     </main>

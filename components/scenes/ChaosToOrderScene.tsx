@@ -4,11 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getLenis, lockScrollAt, ScrollLock } from "@/lib/scrollLock";
 import { waitForSpace, SpaceGate } from "@/lib/waitForSpace";
 
-type Phase = "idle" | "chaos" | "grid" | "shortlist" | "whiteout" | "done";
+type Phase =
+  | "idle"
+  | "chaos"
+  | "grid"
+  | "five"
+  | "shortlist"
+  | "whiteout"
+  | "done";
 
 const N = 220;
 const COLS = 14;
 const ROWS = 10;
+// 가운데 줄에서 뽑는 5개 후보의 그리드 열 (가운데=생존자)
+const CAND_COLS = [2, 5, 7, 9, 12];
 
 type Card = {
   id: number;
@@ -17,6 +26,8 @@ type Card = {
   c1: string;
   c2: string;
   survivor?: boolean;
+  candidate?: boolean;
+  candIndex?: number;
 };
 
 // F · Neon Accent — 다크 베이스에 시안/마젠타 드물게 박힘 (기본 카드도 살짝 밝게)
@@ -35,6 +46,7 @@ function rand(seed: number) {
 const T = {
   chaos: 2400,
   grid: 2800,
+  five: 2400,
   shortlist: 2200,
   whiteGrow: 780, // 방사형 흰 화면 확장
   whiteHold: 720, // 흰 화면 유지 (다음 씬이 흰 배경 그리는 동안 커버)
@@ -68,12 +80,19 @@ export function ChaosToOrderScene() {
         c2: neonColor(i + 100, r2),
       });
     }
-    // 가운데 그리드 칸의 카드 하나를 생존자로
-    const target = { col: Math.floor(COLS / 2), row: Math.floor(ROWS / 2) };
-    const hit = list.find(
-      (c) => c.grid.col === target.col && c.grid.row === target.row
+    // 가운데 줄에서 5개 후보를 뽑고(가운데 열=생존자), 그 중 하나만 살아남음
+    const midRow = Math.floor(ROWS / 2);
+    CAND_COLS.forEach((col, idx) => {
+      const card = list.find((c) => c.grid.row === midRow && c.grid.col === col);
+      if (card) {
+        card.candidate = true;
+        card.candIndex = idx;
+      }
+    });
+    const surv = list.find(
+      (c) => c.grid.row === midRow && c.grid.col === Math.floor(COLS / 2)
     );
-    (hit ?? list[Math.floor(N / 2)]).survivor = true;
+    (surv ?? list[Math.floor(N / 2)]).survivor = true;
     return list;
   }, []);
 
@@ -107,13 +126,17 @@ export function ChaosToOrderScene() {
       );
     };
 
-    // 스페이스바로 단계 통제: 시안(228) → [SPACE] 정리해라 → [SPACE] 살아남은 하나 → [SPACE] 코딩 페이지
+    // 스페이스바 단계 통제: 시안(228) → [SPACE] 정리해라 → [SPACE] 같이 고른 다섯 → [SPACE] 살아남은 하나 → [SPACE] 코딩 페이지
     const runGated = async () => {
       setPhase("chaos");
       gate = waitForSpace();
       await gate.promise;
       if (cancelled) return;
       setPhase("grid");
+      gate = waitForSpace();
+      await gate.promise;
+      if (cancelled) return;
+      setPhase("five");
       gate = waitForSpace();
       await gate.promise;
       if (cancelled) return;
@@ -133,6 +156,8 @@ export function ChaosToOrderScene() {
       let t = T.chaos;
       timers.push(window.setTimeout(() => setPhase("grid"), t));
       t += T.grid;
+      timers.push(window.setTimeout(() => setPhase("five"), t));
+      t += T.five;
       timers.push(window.setTimeout(() => setPhase("shortlist"), t));
       t += T.shortlist;
       timers.push(window.setTimeout(() => setPhase("whiteout"), t));
@@ -170,12 +195,16 @@ export function ChaosToOrderScene() {
     idle: "",
     chaos: "228 번의 시안.",
     grid: "정리해라.",
+    five: "같이 고른 다섯.",
     shortlist: "살아남은 하나.",
     whiteout: "",
     done: "",
   };
   const captionVisible =
-    phase === "chaos" || phase === "grid" || phase === "shortlist";
+    phase === "chaos" ||
+    phase === "grid" ||
+    phase === "five" ||
+    phase === "shortlist";
 
   const whiteActive = phase === "whiteout" || phase === "done";
 
@@ -206,6 +235,12 @@ export function ChaosToOrderScene() {
           const cardW = 70;
           const cardH = 112;
           const isShort = phase === "shortlist" || phase === "whiteout";
+          const gridGapX = 100 / (COLS + 1);
+          const gridGapY = 100 / (ROWS + 1);
+          const gridLeft = `${(c.grid.col + 1) * gridGapX}%`;
+          const gridTop = `${(c.grid.row + 1) * gridGapY}%`;
+          // 후보 5개가 가운데 한 줄로 (candIndex 0~4 → 화면폭 10~90%)
+          const candLeft = `${10 + (c.candIndex ?? 0) * 20}%`;
 
           if (phase === "idle" || phase === "chaos") {
             style = {
@@ -216,15 +251,33 @@ export function ChaosToOrderScene() {
               transition: "all 700ms cubic-bezier(0.6,0,0.2,1)",
             };
           } else if (phase === "grid") {
-            const gridGapX = 100 / (COLS + 1);
-            const gridGapY = 100 / (ROWS + 1);
             style = {
-              left: `${(c.grid.col + 1) * gridGapX}%`,
-              top: `${(c.grid.row + 1) * gridGapY}%`,
+              left: gridLeft,
+              top: gridTop,
               transform: "translate(-50%, -50%) rotate(0deg) scale(1)",
               opacity: 0.9,
               transition: "all 950ms cubic-bezier(0.6,0,0.2,1)",
             };
+          } else if (phase === "five") {
+            if (c.candidate) {
+              style = {
+                left: candLeft,
+                top: "50%",
+                transform: "translate(-50%, -50%) rotate(0deg) scale(1.7)",
+                opacity: 1,
+                transition: "all 950ms cubic-bezier(0.6,0,0.2,1)",
+                zIndex: 10,
+              };
+            } else {
+              // 나머지 215개는 그리드 자리에서 그대로 사라짐
+              style = {
+                left: gridLeft,
+                top: gridTop,
+                transform: "translate(-50%, -50%) scale(0.6)",
+                opacity: 0,
+                transition: "all 600ms cubic-bezier(0.6,0,0.2,1)",
+              };
+            }
           } else if (isShort) {
             if (c.survivor) {
               style = {
@@ -235,13 +288,22 @@ export function ChaosToOrderScene() {
                 transition: "all 1100ms cubic-bezier(0.6,0,0.2,1)",
                 zIndex: 10,
               };
-            } else {
+            } else if (c.candidate) {
+              // 살아남지 못한 4개 후보 — 줄 자리에서 페이드아웃
               style = {
-                left: `${c.chaos.x}%`,
-                top: `${c.chaos.y}%`,
-                transform: "translate(-50%, -50%) scale(0.3)",
+                left: candLeft,
+                top: "50%",
+                transform: "translate(-50%, -50%) scale(0.5)",
                 opacity: 0,
                 transition: "all 700ms cubic-bezier(0.6,0,0.2,1)",
+              };
+            } else {
+              style = {
+                left: gridLeft,
+                top: gridTop,
+                transform: "translate(-50%, -50%) scale(0.4)",
+                opacity: 0,
+                transition: "all 500ms cubic-bezier(0.6,0,0.2,1)",
               };
             }
           } else {
@@ -249,6 +311,7 @@ export function ChaosToOrderScene() {
             style = { opacity: 0, transition: "opacity 400ms" };
           }
 
+          const fiveHi = phase === "five" && !!c.candidate;
           const survivorHi = c.survivor && isShort;
 
           return (
@@ -265,6 +328,8 @@ export function ChaosToOrderScene() {
                     : `linear-gradient(135deg, ${c.c1} 0%, ${c.c2} 100%)`,
                   boxShadow: survivorHi
                     ? "0 8px 40px rgba(46,210,220,.45), 0 0 0 1px rgba(255,255,255,.25)"
+                    : fiveHi
+                    ? "0 10px 36px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.75)"
                     : "0 4px 16px rgba(0,0,0,.4)",
                 }}
               >

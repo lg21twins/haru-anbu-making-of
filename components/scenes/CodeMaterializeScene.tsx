@@ -243,10 +243,11 @@ function HomeIcon({ size = 24 }: { size?: number }) {
     </svg>
   );
 }
+// fluent:book-24-filled — 실제 보호자앱 '기록' 탭과 동일 아이콘
 function BookIcon({ size = 24 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" width={size} height={size} aria-hidden>
-      <path d="M6 2.5h11A1.5 1.5 0 0 1 18.5 4v16A1.5 1.5 0 0 1 17 21.5H6a2.5 2.5 0 0 1 0-5h10.5V4A1.5 1.5 0 0 1 18 2.5H6zM6 18a1 1 0 1 0 0 2h10v-2z" />
+      <path d="M6.5 2A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22h13.25a.75.75 0 0 0 0-1.5H6.5a1 1 0 0 1-1-1h14.25a.75.75 0 0 0 .75-.75V4.5A2.5 2.5 0 0 0 18 2zM8 5h8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1" />
     </svg>
   );
 }

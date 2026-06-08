@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import { useSpaceGate } from "@/lib/useSpaceGate";
 
 type Pill = { text: string };
 
@@ -112,19 +113,21 @@ const allPills: Pill[] = [
 ];
 
 type PillStyle = { bg: string; fg: string; border?: string };
+// 브랜드 그린(#00CB49, HSL 142·100%·40%)을 기준으로, 모든 컬러를 같은 명도·채도(L≈40% S≈100%)
+// 풀채도 쥬얼톤 패밀리로 맞춰 통일감 있게. 흰색 자리는 그린으로 교체.
 const palette: PillStyle[] = [
-  { bg: "#ffffff", fg: "#0a0a0a" },
-  { bg: "#2c7afc", fg: "#ffffff" },
-  { bg: "#0f1b3a", fg: "#74a8ff", border: "rgba(116,168,255,0.4)" },
-  { bg: "#ffffff", fg: "#0a0a0a" },
-  { bg: "#7c4dff", fg: "#ffffff" },
-  { bg: "#10b9c4", fg: "#0a0a0a" },
-  { bg: "#d946ef", fg: "#ffffff" },
-  { bg: "transparent", fg: "#ffffff", border: "rgba(255,255,255,0.3)" },
-  { bg: "#1a2447", fg: "#ffffff" },
-  { bg: "#ff6b9d", fg: "#0a0a0a" },
-  { bg: "#fbbf24", fg: "#0a0a0a" },
-  { bg: "transparent", fg: "#ffffff", border: "rgba(255,255,255,0.4)" },
+  { bg: "#00cb49", fg: "#ffffff" }, // green (브랜드) ← 기존 흰색
+  { bg: "#0066cc", fg: "#ffffff" }, // blue
+  { bg: "#8100cc", fg: "#ffffff" }, // violet
+  { bg: "#00cb49", fg: "#ffffff" }, // green (브랜드) ← 기존 흰색
+  { bg: "#3300cc", fg: "#ffffff" }, // indigo
+  { bg: "#00cca3", fg: "#06130a" }, // teal
+  { bg: "#aa00cc", fg: "#ffffff" }, // magenta
+  { bg: "#cc0088", fg: "#ffffff" }, // fuchsia
+  { bg: "#0044cc", fg: "#ffffff" }, // deep blue
+  { bg: "#cc0055", fg: "#ffffff" }, // rose
+  { bg: "#cc5f00", fg: "#06130a" }, // amber
+  { bg: "#00a3cc", fg: "#06130a" }, // cyan
 ];
 
 function hash(n: number): number {
@@ -142,7 +145,9 @@ function shuffleSeed<T>(arr: T[], seed: number): T[] {
 const ROWS = 6;
 const PILLS_PER_ROW = Math.ceil(allPills.length / ROWS);
 
-export function PromptGrammarScene() {
+export function PromptGrammarScene({ gate }: { gate?: boolean } = {}) {
+  const sectionRef = useRef<HTMLElement>(null);
+  useSpaceGate(sectionRef, { gate, steps: 1 });
   const rows = useMemo(() => {
     // 단어를 6개 행으로 분배 (행마다 다른 시드로 셔플 → 행마다 다른 단어 묶음)
     return Array.from({ length: ROWS }).map((_, r) => {
@@ -156,14 +161,15 @@ export function PromptGrammarScene() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#0a1024] py-20 md:py-28">
-      <div className="mb-8 px-6 text-center md:mb-12">
-        <h2
-          className="font-sans font-semibold text-white"
-          style={{ fontSize: "clamp(1.4rem, 2.6vw, 2.2rem)" }}
-        >
+    <section
+      ref={sectionRef}
+      className="relative w-full overflow-hidden bg-black py-20 md:py-28"
+    >
+      <div className="mb-[7vh] px-6 text-center md:mb-[9vh]">
+        {/* 다른 섹션 타이틀과 통일: h3 · text-section-title · extrabold · tracking-tight */}
+        <h3 className="font-sans text-[length:var(--text-section-title)] font-extrabold tracking-tight text-white">
           우리가 자주 보낸 말들.
-        </h2>
+        </h3>
       </div>
 
       <div className="relative flex flex-col gap-3 md:gap-4">
