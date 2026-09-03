@@ -57,6 +57,17 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css"
         />
+        {/* 로고 진화 씬의 시안 4장은 그 씬이 화면에 올 때 처음 요청된다. 발표 도중
+            회선이 끊기면(강연장에선 흔하다) 넉 장이 통째로 빈 칸이 된다 — 실제로
+            오프라인 리허설에서 이 넷만 깨졌다. 미리 받아 캐시에 넣어 둔다(합 600KB). */}
+        {[1, 2, 3, 4].map((n) => (
+          <link
+            key={n}
+            rel="preload"
+            as="image"
+            href={`/making_of/media/logo/attempt-${n}.png`}
+          />
+        ))}
       </head>
       <body>
         <ReducedMotionProvider>
