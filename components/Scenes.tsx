@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
 import { StartGate } from "@/components/StartGate";
+import { ScrollCue } from "@/components/ScrollCue";
+import { ProgressBar } from "@/components/ProgressBar";
 import { CloverLineScene } from "@/components/scenes/CloverLineScene";
 import { OpeningPromptScene } from "@/components/scenes/OpeningPromptScene";
 import { TeammateLineScene } from "@/components/scenes/TeammateLineScene";
@@ -55,8 +57,12 @@ const BentoTransformScene = dynamic(
 export function Scenes() {
   return (
     <main className="relative w-full bg-black text-white">
-      {/* 시작 게이트 — 스페이스바(또는 클릭)로 숫자 폭격부터 시작 */}
+      {/* 시작 게이트 — 스크롤(또는 클릭/엔터)로 숫자 폭격부터 시작 */}
       <StartGate />
+      {/* 하단 스크롤 단서 — 처음 보는 사람용, 멈추면 다시 떠서 안내 */}
+      <ScrollCue />
+      {/* 상단 진행 표시줄 — 지금 어디쯤인지 가늠 */}
+      <ProgressBar />
       <Suspense fallback={<div className="h-screen bg-black" />}>
         {/* 00 — 규모 폭격: 숫자 (12,236 / 612 / 228) */}
         <div id="nav-numbers" className="block" />

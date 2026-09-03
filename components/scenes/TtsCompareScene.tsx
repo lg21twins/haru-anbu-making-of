@@ -242,7 +242,7 @@ export function TtsCompareScene({ id, gate }: { id?: string; gate?: boolean }) {
         <div className="grid w-full grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-10">
           <Player
             side="before"
-            src="/media/audio/tts-before.mp3"
+            src="/making_of/media/audio/tts-before.mp3"
             label="BEFORE"
             title="기존 음성"
             accent="#8A9099"
@@ -256,7 +256,7 @@ export function TtsCompareScene({ id, gate }: { id?: string; gate?: boolean }) {
           />
           <Player
             side="after"
-            src="/media/audio/tts-after.mp3"
+            src="/making_of/media/audio/tts-after.mp3"
             label="AFTER"
             title="개선된 음성"
             accent="var(--color-accent-green)"
