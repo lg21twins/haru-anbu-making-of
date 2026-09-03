@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lockScrollAt, ScrollLock } from "@/lib/scrollLock";
 import { subscribeAdvance } from "@/lib/scrollAdvance";
+import { useCoarsePointer } from "@/lib/useCoarsePointer";
 
 // 로드 직후 자동 시작하지 않고 대기 → 스크롤(또는 클릭/엔터)로 숫자 폭격부터 시작.
 type Phase = "wait" | "go" | "gone";
 
 export function StartGate() {
   const [phase, setPhase] = useState<Phase>("wait");
+  // 터치 기기엔 Enter 키가 없다 — 안내 문구를 갈아끼운다.
+  const touch = useCoarsePointer();
   const lockRef = useRef<ScrollLock | null>(null);
   const goneTimer = useRef<number | null>(null);
   const unsubRef = useRef<(() => void) | null>(null);
@@ -74,27 +77,33 @@ export function StartGate() {
           className="flex items-center gap-2"
           style={{ fontSize: "15px", letterSpacing: "0.04em", fontWeight: 500 }}
         >
-          <span
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5"
-            style={{
-              background: "rgba(255,255,255,0.12)",
-              fontFamily: "var(--font-jetbrains), monospace",
-              letterSpacing: "0.04em",
-              fontSize: "14px",
-            }}
-          >
-            Enter
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path
-                d="M20 6v5a3 3 0 0 1-3 3H5m0 0l4-4m-4 4l4 4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          <span style={{ opacity: 0.75 }}>또는 스크롤로 시작</span>
+          {touch ? (
+            <span style={{ opacity: 0.75 }}>스크롤하거나 탭해서 시작</span>
+          ) : (
+            <>
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5"
+                style={{
+                  background: "rgba(255,255,255,0.12)",
+                  fontFamily: "var(--font-jetbrains), monospace",
+                  letterSpacing: "0.04em",
+                  fontSize: "14px",
+                }}
+              >
+                Enter
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M20 6v5a3 3 0 0 1-3 3H5m0 0l4-4m-4 4l4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span style={{ opacity: 0.75 }}>또는 스크롤로 시작</span>
+            </>
+          )}
         </span>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
           <path
