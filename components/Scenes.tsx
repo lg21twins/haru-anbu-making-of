@@ -12,6 +12,7 @@ import { TeammateLineScene } from "@/components/scenes/TeammateLineScene";
 import { CommandScene } from "@/components/scenes/CommandScene";
 import { AutoStatsScene } from "@/components/scenes/AutoStatsScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
+import { FieldScene } from "@/components/scenes/FieldScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
 
 const LogoEvolutionScene = dynamic(() =>
@@ -112,8 +113,12 @@ export function Scenes() {
 
         {/* === 회고/방법: 우리가 자주 보낸 말들 === */}
         <div id="nav-method" className="block" />
-        {/* 스페이스 → "하루안부." 타이틀 카드로 이동 */}
+        {/* 스페이스 → KHF 현장 검증으로 이동 */}
         <PromptGrammarScene gate />
+
+        {/* === 현장: KHF 2026에서 방향을 확인하다 === */}
+        {/* 제작 과정을 다 보여준 "뒤"에 온다. 앞에 두면 참고 자료로 축소된다 */}
+        <FieldScene gate />
 
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         {/* 스페이스 → 엔딩 크레딧으로 이동 */}
