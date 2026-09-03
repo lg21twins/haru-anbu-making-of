@@ -17,7 +17,7 @@ import { useSpaceGate } from "@/lib/useSpaceGate";
 // 나오면 "그날 찍은 게 이게 다"로 읽혀서, 다녀왔다는 사실 자체가 약해진다.
 // 한 프레임에서 뜬 크롭도 같은 사진으로 친다 — 그래서 단체사진과 배너 클로즈업
 // 중에서는 배너와 팀이 한 컷에 다 들어 있는 단체사진만 남겼다.
-//   0 walk · 1 team · 2 card+badges · 3 listen+ai-booth+pitch · 4 없음 · 5 badge-detail
+//   0 walk · 1 team · 2 badges · 3 listen+ai-booth+pitch · 4 없음 · 5 card
 const BEATS = 6;
 const EASE = "cubic-bezier(0.2,1,0.4,1)";
 const GRAY = "grayscale(1) contrast(1.06)";
@@ -25,13 +25,7 @@ const GRAY = "grayscale(1) contrast(1.06)";
 // 전면을 덮는 배경 사진(0·5비트). 나머지 비트의 사진은 레이아웃 안에 직접 놓인다.
 const BACKDROPS = [
   { src: "khf-walk.webp", beat: 0, dim: 0.18, pos: "50% 42%" },
-  { src: "khf-badge-detail.webp", beat: 5, dim: 0.2, pos: "50% 50%" },
-] as const;
-
-// 2비트 — 무엇을 들고 갔나. 높이를 맞춰 나란히 두면 원본 비율을 안 깨고도 한 줄이 된다.
-const WENT = [
-  { src: "khf-card.webp", alt: "AI 디지털헬스케어 특별관 앞에서 든 팀 명함", ratio: "4 / 3" },
-  { src: "khf-badges.webp", alt: "목에 건 KHF 2026 참관 배지 세 개", ratio: "3 / 4" },
+  { src: "khf-card.webp", beat: 5, dim: 0.22, pos: "50% 38%" }, // 더 내리면 명함이 화면을 덮어 장면이 안 읽힌다
 ] as const;
 
 // 3비트 — 확인한 것. 한 줄에 사진 한 장씩, 그 줄의 근거가 되는 장면으로 붙인다.
@@ -181,22 +175,18 @@ export function FieldScene({ gate }: { gate?: boolean } = {}) {
           >
             한 학기 동안 AI와 만든 것을 들고 갔다.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4 md:gap-6">
-            {WENT.map(({ src, alt, ratio }, i) => (
-              <img
-                key={src}
-                src={`/making_of/media/khf/${src}`}
-                alt={alt}
-                style={{
-                  height: "min(38vh, 30vw)",
-                  aspectRatio: ratio,
-                  objectFit: "cover",
-                  filter: GRAY,
-                  ...reveal(beat === 2, 280 + i * 200),
-                }}
-              />
-            ))}
-          </div>
+          <img
+            src="/making_of/media/khf/khf-badges.webp"
+            alt="‘계원예술대학교 학생’ 이름이 찍힌 KHF 2026 참관 배지 세 개"
+            className="mt-10"
+            style={{
+              height: "min(42vh, 34vw)",
+              aspectRatio: "3 / 4",
+              objectFit: "cover",
+              filter: GRAY,
+              ...reveal(beat === 2, 300),
+            }}
+          />
         </Beat>
 
         {/* ── 3 · 확인한 것 — 한 줄에 근거 사진 한 장씩, 순서대로 쌓인다 ── */}
@@ -231,15 +221,17 @@ export function FieldScene({ gate }: { gate?: boolean } = {}) {
         </Beat>
         {/* eslint-enable @next/next/no-img-element */}
 
-        {/* ── 4 · 결론 — 유일하게 사진 없는 비트. 검정 위 타이포만 남긴다 ── */}
+        {/* ── 4 · 결론 — 유일하게 사진 없는 비트. 검정 위 타이포만 남긴다.
+             이 씬에서 유일하게 초록 강조도 쓰지 않는다: 앞뒤 비트가 초록을
+             쓰기 때문에, 여기만 흰색으로 두면 결론이 저절로 도드라진다. ── */}
         <Beat on={beat === 4}>
           <p
             className="font-sans font-extrabold leading-[1.15] tracking-tight text-white"
-            style={{ fontSize: "clamp(2rem, 6vw, 5rem)" }}
+            style={{ fontSize: "clamp(1.7rem, 5vw, 4.2rem)" }}
           >
-            AI는 80%까지.
+            AI는 도구다.
             <br />
-            마무리는 사람이.
+            사람이 해야 할 일은 남는다.
           </p>
         </Beat>
 
@@ -249,7 +241,7 @@ export function FieldScene({ gate }: { gate?: boolean } = {}) {
             className="font-sans font-semibold leading-[1.25] tracking-tight text-white"
             style={{ fontSize: "clamp(1.6rem, 4.6vw, 3.8rem)" }}
           >
-            그럼 그 80%를,
+            그럼 그 도구를,
             <br />
             어떻게 <span className="text-[var(--color-accent-green)]">활용</span>하면 될까요?
           </p>
