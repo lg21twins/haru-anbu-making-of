@@ -13,6 +13,7 @@ import { CommandScene } from "@/components/scenes/CommandScene";
 import { AutoStatsScene } from "@/components/scenes/AutoStatsScene";
 import { FinalScene } from "@/components/scenes/FinalScene";
 import { FieldScene } from "@/components/scenes/FieldScene";
+import { StudyHubScene } from "@/components/scenes/StudyHubScene";
 import { CreditsScene } from "@/components/scenes/CreditsScene";
 
 const LogoEvolutionScene = dynamic(() =>
@@ -123,7 +124,13 @@ export function Scenes() {
         {/* 끝 — 타이틀 카드 + 영화 크레딧 */}
         {/* 스페이스 → 엔딩 크레딧으로 이동 */}
         <FinalScene gate />
-        <CreditsScene />
+        {/* 스페이스 → 크레딧이 흐른 뒤 마지막 씬으로 */}
+        <CreditsScene gate />
+
+        {/* === 크레딧 뒤 · 이 사이트의 마지막 화면 === */}
+        {/* FIN 이 지나간 다음에 온다. 기록을 다 본 사람에게만 건네는 초대라서,
+            중간에 두면 "관련 링크" 로 읽히고 여기 두면 마지막 말이 된다. */}
+        <StudyHubScene gate />
       </Suspense>
     </main>
   );
