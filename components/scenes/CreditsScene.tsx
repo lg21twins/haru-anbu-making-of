@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSpaceGate } from "@/lib/useSpaceGate";
 
 type Line =
   | { kind: "title"; text: string }
@@ -267,11 +268,16 @@ const credits: Line[] = [
   { kind: "spacer", h: 14 },
 ];
 
-const ANIMATION_DURATION_S = 70;
+// 3분 발표에 70초는 너무 길었다. 프롬프트는 훑어보는 용도라 30초면 충분하다.
+const ANIMATION_DURATION_S = 30;
 
-export function CreditsScene() {
+export function CreditsScene({ gate }: { gate?: boolean } = {}) {
   const sectionRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
+
+  // 크레딧이 다 흐른 뒤 엔터 한 번으로 마지막 씬(스터디 허브)으로 넘어간다.
+  // 다 기다리지 않고 눌러도 넘어가게 둔다 — 발표가 밀릴 때 건너뛸 여지를 남긴다.
+  useSpaceGate(sectionRef, { gate, steps: 1 });
 
   useEffect(() => {
     const el = sectionRef.current;
